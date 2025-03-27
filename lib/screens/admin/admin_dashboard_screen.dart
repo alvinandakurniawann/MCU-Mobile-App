@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/pendaftaran_provider.dart';
-import '../../providers/paket_provider.dart';
+import '../../providers/paket_mcu_provider.dart';
 import 'jadwal_admin_screen.dart';
 import 'paket_mcu_admin_screen.dart';
 import 'pasien_admin_screen.dart';
@@ -16,18 +16,33 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
+  bool _isLoading = true;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _loadData();
   }
 
   Future<void> _loadData() async {
-    await Future.wait([
-      context.read<PendaftaranProvider>().loadPendaftaranList(),
-      context.read<PaketProvider>().loadPaketList(),
-    ]);
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await Future.wait([
+        context.read<PendaftaranProvider>().loadPendaftaranList(),
+        context.read<PaketMCUProvider>().loadPaketList(),
+      ]);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -112,7 +127,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildDashboardContent() {
-    return Consumer2<PendaftaranProvider, PaketProvider>(
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    return Consumer2<PendaftaranProvider, PaketMCUProvider>(
       builder: (context, pendaftaranProvider, paketProvider, child) {
         if (pendaftaranProvider.isLoading || paketProvider.isLoading) {
           return const Center(

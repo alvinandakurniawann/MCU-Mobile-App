@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import '../providers/user_provider.dart';
-import 'register_screen.dart';
-import 'user/register_user_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({Key? key}) : super(key: key);
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -16,8 +13,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
   bool _isAdmin = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -34,36 +31,25 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      final authProvider = context.read<AuthProvider>();
       bool success;
+
       if (_isAdmin) {
-        success = await context.read<AuthProvider>().login(
-              _usernameController.text,
-              _passwordController.text,
-            );
+        success = await authProvider.loginAdmin(
+          _usernameController.text,
+          _passwordController.text,
+        );
       } else {
-        success = await context.read<UserProvider>().login(
-              _usernameController.text,
-              _passwordController.text,
-            );
+        success = await authProvider.login(
+          _usernameController.text,
+          _passwordController.text,
+        );
       }
 
-      if (!mounted) return;
-
-      if (success) {
+      if (success && mounted) {
         Navigator.pushReplacementNamed(
           context,
           _isAdmin ? '/admin' : '/user',
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isAdmin
-                  ? context.read<AuthProvider>().error ?? 'Login gagal'
-                  : context.read<UserProvider>().error ?? 'Login gagal',
-            ),
-            backgroundColor: Colors.red,
-          ),
         );
       }
     } finally {
@@ -80,105 +66,83 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.medical_services,
-                  size: 80,
-                  color: Colors.blue,
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'MedCheck Mobile',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(
-                      value: false,
-                      label: Text('User'),
-                      icon: Icon(Icons.person),
+          padding: const EdgeInsets.all(24),
+          child: Card(
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'MedCheck',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF40E0D0),
+                      ),
                     ),
-                    ButtonSegment(
-                      value: true,
-                      label: Text('Admin'),
-                      icon: Icon(Icons.admin_panel_settings),
+                    const SizedBox(height: 32),
+                    TextFormField(
+                      controller: _usernameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Username',
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Username tidak boleh kosong';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _passwordController,
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: Icon(Icons.lock),
+                      ),
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Password tidak boleh kosong';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    SwitchListTile(
+                      title: const Text('Login sebagai Admin'),
+                      value: _isAdmin,
+                      onChanged: (value) {
+                        setState(() {
+                          _isAdmin = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _login,
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Login'),
+                      ),
                     ),
                   ],
-                  selected: {_isAdmin},
-                  onSelectionChanged: (Set<bool> newSelection) {
-                    setState(() {
-                      _isAdmin = newSelection.first;
-                    });
-                  },
                 ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Username',
-                    prefixIcon: Icon(Icons.person),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Username tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Password tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('Login'),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => _isAdmin
-                            ? const RegisterScreen()
-                            : const RegisterUserScreen(),
-                      ),
-                    );
-                  },
-                  child: Text(_isAdmin
-                      ? 'Belum punya akun admin? Daftar'
-                      : 'Belum punya akun? Daftar'),
-                ),
-              ],
+              ),
             ),
           ),
         ),

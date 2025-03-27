@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:logging/logging.dart';
 import 'screens/login_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/user/user_dashboard_screen.dart';
@@ -14,6 +15,14 @@ import 'providers/pendaftaran_provider.dart';
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // Setup logging
+    Logger.root.level = Level.ALL;
+    Logger.root.onRecord.listen((record) {
+      debugPrint('${record.level.name}: ${record.time}: ${record.message}');
+    });
+
+    final logger = Logger('main');
 
     // Load .env file
     await dotenv.load(fileName: ".env");
@@ -34,7 +43,7 @@ void main() async {
 
     runApp(const MyApp());
   } catch (e) {
-    print('Error initializing app: $e');
+    Logger('main').severe('Error initializing app: $e');
     runApp(
       MaterialApp(
         home: Scaffold(
