@@ -1,34 +1,16 @@
-import 'package:mysql1/mysql1.dart';
-import 'config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/supabase_config.dart';
 
-class DatabaseConnection {
-  static MySqlConnection? _connection;
+class SupabaseConnection {
+  static final client = SupabaseClient(
+    SupabaseConfig.url,
+    SupabaseConfig.anonKey,
+  );
 
-  static Future<MySqlConnection> get connection async {
-    if (_connection == null) {
-      final settings = ConnectionSettings(
-        host: DatabaseConfig.host,
-        port: DatabaseConfig.port,
-        db: DatabaseConfig.database,
-        user: DatabaseConfig.username,
-        password: DatabaseConfig.password,
-      );
-
-      try {
-        _connection = await MySqlConnection.connect(settings);
-        print('Database connected successfully');
-      } catch (e) {
-        print('Error connecting to database: $e');
-        rethrow;
-      }
-    }
-    return _connection!;
-  }
-
-  static Future<void> close() async {
-    if (_connection != null) {
-      await _connection!.close();
-      _connection = null;
-    }
+  static Future<void> initialize() async {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      anonKey: SupabaseConfig.anonKey,
+    );
   }
 }

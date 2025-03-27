@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/paket_mcu.dart';
 
-class PaketMCUProvider with ChangeNotifier {
+class PaketProvider with ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
   List<PaketMCU> _paketList = [];
   String? _error;
@@ -36,29 +36,7 @@ class PaketMCUProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> createPaketMCU(Map<String, dynamic> paketData) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final response =
-          await _supabase.from('paket_mcu').insert(paketData).select().single();
-
-      final newPaket = PaketMCU.fromJson(response);
-      _paketList = [newPaket, ..._paketList];
-      _error = null;
-      return true;
-    } catch (e) {
-      _error = 'Terjadi kesalahan saat membuat paket MCU';
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<bool> updatePaketMCU(String id, Map<String, dynamic> paketData) async {
+  Future<void> createPaket(PaketMCU paket) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -66,42 +44,61 @@ class PaketMCUProvider with ChangeNotifier {
     try {
       final response = await _supabase
           .from('paket_mcu')
-          .update(paketData)
-          .eq('id', id)
+          .insert(paket.toJson())
           .select()
           .single();
 
-      final updatedPaket = PaketMCU.fromJson(response);
-      _paketList = _paketList.map((paket) {
-        if (paket.id == updatedPaket.id) {
-          return updatedPaket;
-        }
-        return paket;
-      }).toList();
+      final newPaket = PaketMCU.fromJson(response);
+      _paketList = [newPaket, ..._paketList];
       _error = null;
-      return true;
     } catch (e) {
-      _error = 'Terjadi kesalahan saat memperbarui paket MCU';
-      return false;
+      _error = 'Terjadi kesalahan saat membuat paket MCU baru';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<bool> deletePaketMCU(String id) async {
+  Future<void> updatePaket(PaketMCU paket) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _supabase
+          .from('paket_mcu')
+          .update(paket.toJson())
+          .eq('id', paket.id)
+          .select()
+          .single();
+
+      final updatedPaket = PaketMCU.fromJson(response);
+      _paketList = _paketList.map((p) {
+        if (p.id == updatedPaket.id) {
+          return updatedPaket;
+        }
+        return p;
+      }).toList();
+      _error = null;
+    } catch (e) {
+      _error = 'Terjadi kesalahan saat memperbarui paket MCU';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deletePaket(String id) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
       await _supabase.from('paket_mcu').delete().eq('id', id);
-      _paketList = _paketList.where((paket) => paket.id != id).toList();
+      _paketList = _paketList.where((p) => p.id != id).toList();
       _error = null;
-      return true;
     } catch (e) {
       _error = 'Terjadi kesalahan saat menghapus paket MCU';
-      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

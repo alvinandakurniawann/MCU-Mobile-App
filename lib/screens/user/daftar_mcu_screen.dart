@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/paket_mcu_provider.dart';
 import '../../providers/pendaftaran_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../models/paket_mcu.dart';
 
 class DaftarMCUScreen extends StatefulWidget {
@@ -12,155 +13,209 @@ class DaftarMCUScreen extends StatefulWidget {
 }
 
 class _DaftarMCUScreenState extends State<DaftarMCUScreen> {
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  final _formKey = GlobalKey<FormState>();
   PaketMCU? _selectedPaket;
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      context.read<PaketMCUProvider>().loadPaketList();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<PaketMCUProvider>().loadPaketList();
+      }
     });
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+    );
+    if (picked != null && picked != _selectedDate && mounted) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null && picked != _selectedTime && mounted) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
+  }
+
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = context.read<UserProvider>().currentUser;
+      if (user == null) {
+        throw Exception('User tidak ditemukan');
+      }
+
+      final success =
+          await context.read<PendaftaranProvider>().createPendaftaran(
+                userId: user.id,
+                paketMcuId: _selectedPaket!.id,
+                tanggalPendaftaran: DateTime(
+                  _selectedDate.year,
+                  _selectedDate.month,
+                  _selectedDate.day,
+                  _selectedTime.hour,
+                  _selectedTime.minute,
+                ),
+                totalHarga: _selectedPaket!.harga.toDouble(),
+              );
+
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pendaftaran berhasil'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.read<PendaftaranProvider>().error ??
+                  'Gagal melakukan pendaftaran',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+      appBar: AppBar(
+        title: const Text('Daftar MCU'),
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Pendaftaran MCU',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 24),
-            Consumer<PaketMCUProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (provider.error != null) {
-                  return Center(child: Text(provider.error!));
-                }
-
-                return DropdownButtonFormField<PaketMCU>(
-                  decoration: const InputDecoration(
-                    labelText: 'Pilih Paket MCU',
-                  ),
-                  value: _selectedPaket,
-                  items: provider.paketList
-                      .map((paket) => DropdownMenuItem(
-                            value: paket,
-                            child: Text('${paket.nama} - Rp${paket.harga}'),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedPaket = value;
-                    });
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              title: const Text('Pilih Tanggal'),
-              subtitle: Text(_selectedDate == null
-                  ? 'Belum dipilih'
-                  : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'),
-              trailing: const Icon(Icons.calendar_today),
-              onTap: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 30)),
-                );
-                if (date != null) {
-                  setState(() {
-                    _selectedDate = date;
-                  });
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              title: const Text('Pilih Jam'),
-              subtitle: Text(_selectedTime == null
-                  ? 'Belum dipilih'
-                  : '${_selectedTime!.hour}:${_selectedTime!.minute}'),
-              trailing: const Icon(Icons.access_time),
-              onTap: () async {
-                final time = await showTimePicker(
-                  context: context,
-                  initialTime: TimeOfDay.now(),
-                );
-                if (time != null) {
-                  setState(() {
-                    _selectedTime = time;
-                  });
-                }
-              },
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (_selectedPaket == null ||
-                      _selectedDate == null ||
-                      _selectedTime == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Mohon lengkapi semua data'),
-                      ),
-                    );
-                    return;
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Consumer<PaketMCUProvider>(
+                builder: (context, provider, child) {
+                  if (provider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
                   }
 
-                  final pendaftaranData = {
-                    'id_paket': _selectedPaket!.id,
-                    'tanggal_pendaftaran':
-                        '${_selectedDate!.year}-${_selectedDate!.month}-${_selectedDate!.day}',
-                    'jam_pendaftaran':
-                        '${_selectedTime!.hour}:${_selectedTime!.minute}:00',
-                    'total_biaya': _selectedPaket!.harga,
-                  };
-
-                  final success = await context
-                      .read<PendaftaranProvider>()
-                      .createPendaftaran(pendaftaranData);
-
-                  if (success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Pendaftaran berhasil'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                    // Reset form
-                    setState(() {
-                      _selectedPaket = null;
-                      _selectedDate = null;
-                      _selectedTime = null;
-                    });
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Pendaftaran gagal'),
-                        backgroundColor: Colors.red,
-                      ),
+                  if (provider.error != null) {
+                    return Center(
+                      child: Text('Error: ${provider.error}'),
                     );
                   }
+
+                  return DropdownButtonFormField<PaketMCU>(
+                    value: _selectedPaket,
+                    decoration: const InputDecoration(
+                      labelText: 'Pilih Paket MCU',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: provider.paketList.map((paket) {
+                      return DropdownMenuItem(
+                        value: paket,
+                        child: Text(paket.namaPaket),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedPaket = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Silakan pilih paket MCU';
+                      }
+                      return null;
+                    },
+                  );
                 },
-                child: const Text('Daftar MCU'),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              ListTile(
+                title: const Text('Tanggal Pemeriksaan'),
+                subtitle: Text(
+                  '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () => _selectDate(context),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                title: const Text('Jam Pemeriksaan'),
+                subtitle: Text(
+                  '${_selectedTime.hour}:${_selectedTime.minute.toString().padLeft(2, '0')}',
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.access_time),
+                  onPressed: () => _selectTime(context),
+                ),
+              ),
+              const SizedBox(height: 32),
+              if (_selectedPaket != null) ...[
+                Text(
+                  'Total Biaya: Rp ${_selectedPaket!.harga}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submitForm,
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Daftar'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,76 +1,65 @@
 import 'package:flutter/material.dart';
-import '../models/admin.dart';
-import '../services/api_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import '../models/user.dart';
 
-class AuthProvider extends ChangeNotifier {
-  final ApiService _apiService = ApiService();
-  Admin? _currentAdmin;
-  bool _isLoading = false;
+class AuthProvider with ChangeNotifier {
+  final SupabaseClient _supabase = Supabase.instance.client;
+  User? _currentUser;
   String? _error;
+  bool _isLoading = false;
 
-  Admin? get currentAdmin => _currentAdmin;
-  bool get isLoading => _isLoading;
+  User? get currentUser => _currentUser;
   String? get error => _error;
-  bool get isAuthenticated => _currentAdmin != null;
+  bool get isLoading => _isLoading;
 
   Future<bool> login(String username, String password) async {
-    try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
 
-      final response = await _apiService.login(username, password);
-      if (response['success']) {
-        _currentAdmin = Admin.fromJson(response['data']);
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      } else {
-        _error = response['message'];
-        _isLoading = false;
-        notifyListeners();
-        return false;
-      }
+    try {
+      final response = await _supabase
+          .from('users')
+          .select()
+          .eq('username', username)
+          .eq('password', password)
+          .single();
+
+      _currentUser = User.fromJson(response);
+      _error = null;
+      return true;
     } catch (e) {
-      _error = e.toString();
+      _error = 'Username atau password salah';
+      return false;
+    } finally {
       _isLoading = false;
       notifyListeners();
-      return false;
     }
   }
 
-  Future<bool> register(Map<String, dynamic> adminData) async {
-    try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
+  Future<bool> register(Map<String, dynamic> userData) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
 
-      final response = await _apiService.register(adminData);
-      if (response['success']) {
-        _currentAdmin = Admin.fromJson(response['data']);
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      } else {
-        _error = response['message'];
-        _isLoading = false;
-        notifyListeners();
-        return false;
-      }
+    try {
+      final response =
+          await _supabase.from('users').insert(userData).select().single();
+
+      _currentUser = User.fromJson(response);
+      _error = null;
+      return true;
     } catch (e) {
-      _error = e.toString();
+      _error = 'Terjadi kesalahan saat mendaftar';
+      return false;
+    } finally {
       _isLoading = false;
       notifyListeners();
-      return false;
     }
   }
 
   void logout() {
-    _currentAdmin = null;
-    notifyListeners();
-  }
-
-  void clearError() {
+    _currentUser = null;
     _error = null;
     notifyListeners();
   }

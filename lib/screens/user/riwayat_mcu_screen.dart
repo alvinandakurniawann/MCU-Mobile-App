@@ -14,7 +14,7 @@ class _RiwayatMCUScreenState extends State<RiwayatMCUScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PendaftaranProvider>().loadPendaftaranList();
     });
   }
@@ -22,90 +22,103 @@ class _RiwayatMCUScreenState extends State<RiwayatMCUScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Riwayat MCU',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: Consumer<PendaftaranProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+      appBar: AppBar(
+        title: const Text('Riwayat MCU'),
+      ),
+      body: Consumer<PendaftaranProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                  if (provider.error != null) {
-                    return Center(child: Text(provider.error!));
-                  }
+          if (provider.error != null) {
+            return Center(
+              child: Text('Error: ${provider.error}'),
+            );
+          }
 
-                  if (provider.pendaftaranList.isEmpty) {
-                    return const Center(
-                      child: Text('Belum ada riwayat MCU'),
-                    );
-                  }
+          final pendaftaranList = provider.pendaftaranList;
 
-                  return ListView.builder(
-                    itemCount: provider.pendaftaranList.length,
-                    itemBuilder: (context, index) {
-                      final pendaftaran = provider.pendaftaranList[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        child: ListTile(
-                          title: const Text('Pendaftaran MCU'),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                  'Tanggal: ${pendaftaran.tanggalPendaftaran}'),
-                              Text('Jam: ${pendaftaran.jamPendaftaran}'),
-                              Text(
-                                  'Total Biaya: Rp${pendaftaran.totalBiaya.toStringAsFixed(2)}'),
-                              Text('Status: ${pendaftaran.status}'),
-                              if (pendaftaran.keterangan != null)
-                                Text('Keterangan: ${pendaftaran.keterangan}'),
-                            ],
-                          ),
-                          trailing: _getStatusIcon(pendaftaran.status),
+          if (pendaftaranList.isEmpty) {
+            return const Center(
+              child: Text('Belum ada riwayat MCU'),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: pendaftaranList.length,
+            itemBuilder: (context, index) {
+              final pendaftaran = pendaftaranList[index];
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pendaftaran.user.namaLengkap,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Paket: ${pendaftaran.paketMcu.namaPaket}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Tanggal: ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Total Biaya: Rp ${pendaftaran.totalHarga}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(pendaftaran.status),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          pendaftaran.status,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
 
-  Widget _getStatusIcon(String status) {
-    IconData iconData;
-    Color color;
-
+  Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai':
-        iconData = Icons.check_circle;
-        color = Colors.green;
-        break;
       case 'pending':
-        iconData = Icons.pending;
-        color = Colors.orange;
-        break;
-      case 'batal':
-        iconData = Icons.cancel;
-        color = Colors.red;
-        break;
+        return Colors.orange;
+      case 'confirmed':
+        return Colors.blue;
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
       default:
-        iconData = Icons.help;
-        color = Colors.grey;
+        return Colors.grey;
     }
-
-    return Icon(iconData, color: color);
   }
 }

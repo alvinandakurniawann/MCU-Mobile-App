@@ -7,77 +7,118 @@ class ProfilScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().currentUser;
+
     return Scaffold(
-      body: Padding(
+      appBar: AppBar(
+        title: const Text('Profil'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              context.read<AuthProvider>().logout();
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                  (route) => false,
+                );
+              }
+            },
+          ),
+        ],
+      ),
+      body: user == null
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const CircleAvatar(
+                    radius: 50,
+                    child: Icon(Icons.person, size: 50),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildInfoCard(
+                    title: 'Informasi Pribadi',
+                    children: [
+                      _buildInfoRow('Nama Lengkap', user.namaLengkap),
+                      _buildInfoRow('Username', user.username),
+                      _buildInfoRow('No. KTP', user.noKtp),
+                      _buildInfoRow('Jenis Kelamin', user.jenisKelamin),
+                      _buildInfoRow('Tempat Lahir', user.tempatLahir),
+                      _buildInfoRow(
+                        'Tanggal Lahir',
+                        user.tanggalLahir.toString().split(' ')[0],
+                      ),
+                      _buildInfoRow('Alamat', user.alamat),
+                      _buildInfoRow('No. Handphone', user.noHandphone),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _buildInfoCard(
+                    title: 'Informasi Akun',
+                    children: [
+                      if (user.email != null)
+                        _buildInfoRow('Email', user.email!),
+                      _buildInfoRow(
+                        'Tanggal Daftar',
+                        user.createdAt.toString().split(' ')[0],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildInfoCard({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Card(
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Profil',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 24),
-            Consumer<AuthProvider>(
-              builder: (context, provider, child) {
-                final user = provider.currentAdmin;
-                if (user == null) {
-                  return const Center(
-                    child: Text('Data tidak tersedia'),
-                  );
-                }
-
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.person),
-                          title: const Text('Nama'),
-                          subtitle: Text(user.nama),
-                        ),
-                        const Divider(),
-                        ListTile(
-                          leading: const Icon(Icons.account_circle),
-                          title: const Text('Username'),
-                          subtitle: Text(user.username),
-                        ),
-                        const Divider(),
-                        ListTile(
-                          leading: const Icon(Icons.phone),
-                          title: const Text('No. Handphone'),
-                          subtitle: Text(user.noHandphone),
-                        ),
-                        const Divider(),
-                        ListTile(
-                          leading: const Icon(Icons.location_on),
-                          title: const Text('Alamat'),
-                          subtitle: Text(user.alamat),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  context.read<AuthProvider>().logout();
-                  Navigator.of(context).pushReplacementNamed('/');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                ),
-                child: const Text('Keluar'),
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 16),
+            ...children,
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(value),
+          ),
+        ],
       ),
     );
   }

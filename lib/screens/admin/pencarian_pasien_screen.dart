@@ -12,30 +12,31 @@ class PencarianPasienScreen extends StatefulWidget {
 }
 
 class _PencarianPasienScreenState extends State<PencarianPasienScreen> {
-  final _searchController = TextEditingController();
-  List<Pasien> _filteredPasien = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PasienProvider>().loadPasienList();
     });
   }
 
-  void _filterPasien(String query) {
-    final provider = Provider.of<PasienProvider>(context, listen: false);
-    setState(() {
-      if (query.isEmpty) {
-        _filteredPasien = provider.pasienList;
-      } else {
-        _filteredPasien = provider.pasienList
-            .where((pasien) =>
-                pasien.nama.toLowerCase().contains(query.toLowerCase()) ||
-                pasien.id.toLowerCase().contains(query.toLowerCase()))
-            .toList();
-      }
-    });
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Pasien> _filterPasien(List<Pasien> pasienList) {
+    if (_searchQuery.isEmpty) return pasienList;
+    return pasienList.where((pasien) {
+      return pasien.namaLengkap
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase()) ||
+          pasien.noKtp.contains(_searchQuery);
+    }).toList();
   }
 
   @override
@@ -74,65 +75,57 @@ class _PencarianPasienScreenState extends State<PencarianPasienScreen> {
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Cari pasien berdasarkan nama atau ID',
+                hintText: 'Cari berdasarkan nama atau no. KTP',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _filterPasien('');
-                        },
-                      )
-                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              onChanged: _filterPasien,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
             ),
             const SizedBox(height: 16),
             Expanded(
               child: Consumer<PasienProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading) {
+                builder: (context, pasienProvider, child) {
+                  if (pasienProvider.isLoading) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  if (provider.error != null) {
-                    return Center(child: Text(provider.error!));
+                  if (pasienProvider.error != null) {
+                    return Center(
+                      child: Text('Error: ${pasienProvider.error}'),
+                    );
                   }
 
-                  final pasienList = _searchController.text.isEmpty
-                      ? provider.pasienList
-                      : _filteredPasien;
+                  final filteredPasien =
+                      _filterPasien(pasienProvider.pasienList);
 
-                  if (pasienList.isEmpty) {
+                  if (filteredPasien.isEmpty) {
                     return const Center(
-                      child: Text('Tidak ada data pasien'),
+                      child: Text('Tidak ada pasien yang ditemukan'),
                     );
                   }
 
                   return ListView.builder(
-                    itemCount: pasienList.length,
+                    itemCount: filteredPasien.length,
                     itemBuilder: (context, index) {
-                      final pasien = pasienList[index];
+                      final pasien = filteredPasien[index];
                       return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 8.0,
+                          vertical: 4.0,
+                        ),
                         child: ListTile(
-                          title: Text(pasien.nama),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('ID: ${pasien.id}'),
-                              Text('Tanggal Lahir: ${pasien.tanggalLahir}'),
-                              Text('Jenis Kelamin: ${pasien.jenisKelamin}'),
-                            ],
+                          leading: CircleAvatar(
+                            child: Text(pasien.namaLengkap[0]),
                           ),
-                          trailing: Icon(
-                            Icons.circle,
-                            color: pasien.status.toLowerCase() == 'aktif'
-                                ? Colors.green
-                                : Colors.red,
-                            size: 12,
-                          ),
+                          title: Text(pasien.namaLengkap),
+                          subtitle: Text('No. KTP: ${pasien.noKtp}'),
+                          trailing: Text(pasien.status),
                           onTap: () {
                             // TODO: Implement view patient details
                           },
@@ -147,11 +140,5 @@ class _PencarianPasienScreenState extends State<PencarianPasienScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }

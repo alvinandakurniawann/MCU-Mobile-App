@@ -1,44 +1,47 @@
-class Pasien {
+class User {
   final String id;
-  final String noKtp;
+  final String username;
+  final String password;
   final String namaLengkap;
+  final String noKtp;
   final String jenisKelamin;
   final String tempatLahir;
   final DateTime tanggalLahir;
   final String alamat;
   final String noHandphone;
-  final String email;
-  final String status;
+  final String? email;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  Pasien({
+  User({
     required this.id,
-    required this.noKtp,
+    required this.username,
+    required this.password,
     required this.namaLengkap,
+    required this.noKtp,
     required this.jenisKelamin,
     required this.tempatLahir,
     required this.tanggalLahir,
     required this.alamat,
     required this.noHandphone,
-    required this.email,
-    required this.status,
+    this.email,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  factory Pasien.fromJson(Map<String, dynamic> json) {
-    return Pasien(
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
       id: json['id'],
-      noKtp: json['no_ktp'],
+      username: json['username'],
+      password: json['password'],
       namaLengkap: json['nama_lengkap'],
+      noKtp: json['no_ktp'],
       jenisKelamin: json['jenis_kelamin'],
       tempatLahir: json['tempat_lahir'],
       tanggalLahir: DateTime.parse(json['tanggal_lahir']),
       alamat: json['alamat'],
       noHandphone: json['no_handphone'],
       email: json['email'],
-      status: json['status'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
@@ -47,15 +50,16 @@ class Pasien {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'no_ktp': noKtp,
+      'username': username,
+      'password': password,
       'nama_lengkap': namaLengkap,
+      'no_ktp': noKtp,
       'jenis_kelamin': jenisKelamin,
       'tempat_lahir': tempatLahir,
       'tanggal_lahir': tanggalLahir.toIso8601String(),
       'alamat': alamat,
       'no_handphone': noHandphone,
       'email': email,
-      'status': status,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

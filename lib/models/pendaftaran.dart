@@ -1,38 +1,35 @@
-import 'package:medcheck_mobile/models/user.dart';
 import 'package:medcheck_mobile/models/paket_mcu.dart';
+import 'package:medcheck_mobile/models/user.dart';
 
-class PendaftaranMCU {
+class Pendaftaran {
   final String id;
   final User user;
   final PaketMCU paketMcu;
   final DateTime tanggalPendaftaran;
   final String status;
   final double totalHarga;
-  final String? keterangan;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  PendaftaranMCU({
+  Pendaftaran({
     required this.id,
     required this.user,
     required this.paketMcu,
     required this.tanggalPendaftaran,
     required this.status,
     required this.totalHarga,
-    this.keterangan,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  factory PendaftaranMCU.fromJson(Map<String, dynamic> json) {
-    return PendaftaranMCU(
+  factory Pendaftaran.fromJson(Map<String, dynamic> json) {
+    return Pendaftaran(
       id: json['id'],
       user: User.fromJson(json['user']),
       paketMcu: PaketMCU.fromJson(json['paket_mcu']),
       tanggalPendaftaran: DateTime.parse(json['tanggal_pendaftaran']),
       status: json['status'],
-      totalHarga: (json['total_harga'] as num).toDouble(),
-      keterangan: json['keterangan'],
+      totalHarga: json['total_harga'].toDouble(),
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
@@ -46,7 +43,6 @@ class PendaftaranMCU {
       'tanggal_pendaftaran': tanggalPendaftaran.toIso8601String(),
       'status': status,
       'total_harga': totalHarga,
-      'keterangan': keterangan,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

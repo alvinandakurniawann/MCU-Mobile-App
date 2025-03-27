@@ -1,15 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart';
-import 'screens/admin_dashboard.dart';
-import 'screens/user_dashboard.dart';
+import 'screens/admin/admin_dashboard_screen.dart';
+import 'screens/user/user_dashboard_screen.dart';
 import 'providers/auth_provider.dart';
+import 'providers/user_provider.dart';
 import 'providers/pasien_provider.dart';
 import 'providers/paket_mcu_provider.dart';
 import 'providers/pendaftaran_provider.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    // Load .env file
+    await dotenv.load(fileName: ".env");
+
+    // Validate environment variables
+    final supabaseUrl = dotenv.env['SUPABASE_URL'];
+    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
+
+    if (supabaseUrl == null || supabaseAnonKey == null) {
+      throw Exception('Missing Supabase configuration');
+    }
+
+    // Initialize Supabase
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+
+    runApp(const MyApp());
+  } catch (e) {
+    print('Error initializing app: $e');
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text('Error: $e'),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -20,6 +55,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => PasienProvider()),
         ChangeNotifierProvider(create: (_) => PaketMCUProvider()),
         ChangeNotifierProvider(create: (_) => PendaftaranProvider()),
@@ -74,8 +110,8 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => const LoginScreen(),
-          '/admin': (context) => const AdminDashboard(),
-          '/user': (context) => const UserDashboard(),
+          '/admin': (context) => const AdminDashboardScreen(),
+          '/user': (context) => const UserDashboardScreen(),
         },
       ),
     );
