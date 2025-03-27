@@ -87,13 +87,18 @@ class _DaftarMCUScreenState extends State<DaftarMCUScreen> {
       if (!mounted) return;
 
       if (success) {
+        await context.read<PendaftaranProvider>().loadPendaftaranList();
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Pendaftaran berhasil'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
+
+        if (mounted) {
+          Navigator.pop(context);
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

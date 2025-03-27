@@ -65,6 +65,10 @@ class PendaftaranProvider with ChangeNotifier {
       final newPendaftaran = PendaftaranMCU.fromJson(response);
       _pendaftaranList = [newPendaftaran, ..._pendaftaranList];
       _error = null;
+
+      // Muat ulang data pendaftaran
+      await loadPendaftaranList();
+
       return true;
     } catch (e) {
       _error = 'Terjadi kesalahan saat membuat pendaftaran';
