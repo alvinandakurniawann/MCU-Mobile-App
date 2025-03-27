@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/paket_mcu_provider.dart';
-import '../../models/paket_mcu.dart';
 
 class PaketMCUScreen extends StatefulWidget {
   const PaketMCUScreen({super.key});

@@ -19,8 +19,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _isLoading = true;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
     _loadData();
   }
 
@@ -58,51 +58,103 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               context.read<AuthProvider>().logout();
               Navigator.pushNamedAndRemoveUntil(
                 context,
-                '/login',
+                '/',
                 (route) => false,
               );
             },
           ),
         ],
       ),
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (int index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-            labelType: NavigationRailLabelType.selected,
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.dashboard),
-                label: Text('Dashboard'),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWebLayout = constraints.maxWidth > 600;
+
+          if (isWebLayout) {
+            return Row(
+              children: [
+                NavigationRail(
+                  extended: constraints.maxWidth > 800,
+                  selectedIndex: _selectedIndex,
+                  onDestinationSelected: (int index) {
+                    setState(() {
+                      _selectedIndex = index;
+                    });
+                  },
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.dashboard),
+                      selectedIcon: Icon(Icons.dashboard),
+                      label: Text('Dashboard'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.medical_services),
+                      selectedIcon: Icon(Icons.medical_services),
+                      label: Text('Paket MCU'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.people),
+                      selectedIcon: Icon(Icons.people),
+                      label: Text('Pasien'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.schedule),
+                      selectedIcon: Icon(Icons.schedule),
+                      label: Text('Jadwal'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.bar_chart),
+                      selectedIcon: Icon(Icons.bar_chart),
+                      label: Text('Laporan'),
+                    ),
+                  ],
+                ),
+                const VerticalDivider(thickness: 1, width: 1),
+                Expanded(
+                  child: _buildSelectedScreen(),
+                ),
+              ],
+            );
+          }
+
+          return Column(
+            children: [
+              Expanded(
+                child: _buildSelectedScreen(),
               ),
-              NavigationRailDestination(
-                icon: Icon(Icons.medical_services),
-                label: Text('Paket MCU'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.people),
-                label: Text('Pasien'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.schedule),
-                label: Text('Jadwal'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.bar_chart),
-                label: Text('Laporan'),
+              BottomNavigationBar(
+                currentIndex: _selectedIndex,
+                onTap: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                type: BottomNavigationBarType.fixed,
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.dashboard),
+                    label: 'Dashboard',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.medical_services),
+                    label: 'Paket MCU',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.people),
+                    label: 'Pasien',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.schedule),
+                    label: 'Jadwal',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.bar_chart),
+                    label: 'Laporan',
+                  ),
+                ],
               ),
             ],
-          ),
-          const VerticalDivider(thickness: 1, width: 1),
-          Expanded(
-            child: _buildSelectedScreen(),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -150,82 +202,93 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             .where((p) => p.status.toLowerCase() == 'completed')
             .length;
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Ringkasan',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              GridView.count(
-                shrinkWrap: true,
-                crossAxisCount: 4,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isWebLayout = constraints.maxWidth > 600;
+            final crossAxisCount = isWebLayout ? 4 : 2;
+            final childAspectRatio = isWebLayout ? 1.5 : 1.3;
+            final padding = isWebLayout ? 24.0 : 16.0;
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildStatCard(
-                    'Total Pendaftaran',
-                    totalPendaftaran.toString(),
-                    Icons.assignment,
-                    Colors.blue,
+                  Text(
+                    'Ringkasan',
+                    style: TextStyle(
+                      fontSize: isWebLayout ? 28 : 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  _buildStatCard(
-                    'Menunggu Konfirmasi',
-                    pendingPendaftaran.toString(),
-                    Icons.pending,
-                    Colors.orange,
+                  SizedBox(height: isWebLayout ? 24 : 16),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: childAspectRatio,
+                    children: [
+                      _buildStatCard(
+                        'Total Pendaftaran',
+                        totalPendaftaran.toString(),
+                        Icons.assignment,
+                        Colors.blue,
+                      ),
+                      _buildStatCard(
+                        'Menunggu',
+                        pendingPendaftaran.toString(),
+                        Icons.pending,
+                        Colors.orange,
+                      ),
+                      _buildStatCard(
+                        'Selesai',
+                        completedPendaftaran.toString(),
+                        Icons.check_circle,
+                        Colors.green,
+                      ),
+                      _buildStatCard(
+                        'Total Paket',
+                        totalPaket.toString(),
+                        Icons.medical_services,
+                        Colors.purple,
+                      ),
+                    ],
                   ),
-                  _buildStatCard(
-                    'Selesai',
-                    completedPendaftaran.toString(),
-                    Icons.check_circle,
-                    Colors.green,
+                  SizedBox(height: isWebLayout ? 40 : 32),
+                  Text(
+                    'Pendaftaran Terbaru',
+                    style: TextStyle(
+                      fontSize: isWebLayout ? 24 : 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  _buildStatCard(
-                    'Total Paket MCU',
-                    totalPaket.toString(),
-                    Icons.medical_services,
-                    Colors.purple,
+                  const SizedBox(height: 16),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount:
+                        pendaftaranProvider.pendaftaranList.take(5).length,
+                    itemBuilder: (context, index) {
+                      final pendaftaran =
+                          pendaftaranProvider.pendaftaranList[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          title: Text(pendaftaran.user.namaLengkap),
+                          subtitle: Text(
+                            '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
+                          ),
+                          trailing: _buildStatusChip(pendaftaran.status),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
-              const Text(
-                'Pendaftaran Terbaru',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Card(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: pendaftaranProvider.pendaftaranList
-                      .take(5)
-                      .length, // Show only 5 latest registrations
-                  itemBuilder: (context, index) {
-                    final pendaftaran =
-                        pendaftaranProvider.pendaftaranList[index];
-                    return ListTile(
-                      title: Text(pendaftaran.user.namaLengkap),
-                      subtitle: Text(
-                        '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
-                      ),
-                      trailing: _buildStatusChip(pendaftaran.status),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -234,33 +297,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildStatCard(
       String title, String value, IconData icon, Color color) {
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 48,
+              size: 32,
               color: color,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               value,
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               title,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 color: Colors.grey,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

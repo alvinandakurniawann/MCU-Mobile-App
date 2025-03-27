@@ -49,50 +49,50 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Tentang Kami',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: 16),
+                  Text(
                     'MedCheck adalah platform kesehatan terpercaya yang menyediakan layanan Medical Check Up dengan standar internasional. Kami berkomitmen untuk memberikan pelayanan kesehatan terbaik dengan didukung oleh tim medis profesional dan peralatan modern.',
                     style: TextStyle(fontSize: 16),
                     textAlign: TextAlign.justify,
                   ),
-                  const SizedBox(height: 32),
-                  const Text(
+                  SizedBox(height: 32),
+                  Text(
                     'Visi',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Menjadi penyedia layanan Medical Check Up terdepan dengan standar internasional yang terpercaya dan terjangkau bagi masyarakat Indonesia.',
                     style: TextStyle(fontSize: 16),
                     textAlign: TextAlign.justify,
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
+                  SizedBox(height: 24),
+                  Text(
                     'Misi',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         '• Menyediakan layanan Medical Check Up berkualitas dengan harga terjangkau',
                         style: TextStyle(fontSize: 16),
@@ -114,30 +114,30 @@ class AboutScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                  const Text(
+                  SizedBox(height: 32),
+                  Text(
                     'Kontak',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   ListTile(
-                    leading: const Icon(Icons.location_on),
-                    title: const Text('Alamat'),
-                    subtitle: const Text(
+                    leading: Icon(Icons.location_on),
+                    title: Text('Alamat'),
+                    subtitle: Text(
                         'Jl. Telekomunikasi No. 1, Terusan Buahbatu, Bandung'),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.phone),
-                    title: const Text('Telepon'),
-                    subtitle: const Text('+62 22 7564108'),
+                    leading: Icon(Icons.phone),
+                    title: Text('Telepon'),
+                    subtitle: Text('+62 22 7564108'),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.email),
-                    title: const Text('Email'),
-                    subtitle: const Text('info@medcheck.com'),
+                    leading: Icon(Icons.email),
+                    title: Text('Email'),
+                    subtitle: Text('info@medcheck.com'),
                   ),
                 ],
               ),

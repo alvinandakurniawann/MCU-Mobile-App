@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../models/user.dart';
+import 'user_provider.dart';
 
 class AuthProvider with ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -8,6 +9,11 @@ class AuthProvider with ChangeNotifier {
   String? _error;
   bool _isLoading = false;
   bool _isAdmin = false;
+  late UserProvider _userProvider;
+
+  void initialize(UserProvider userProvider) {
+    _userProvider = userProvider;
+  }
 
   dynamic get currentUser => _currentUser;
   String? get error => _error;
@@ -24,7 +30,7 @@ class AuthProvider with ChangeNotifier {
       final userResponse = await _supabase
           .from('users')
           .select()
-          .eq('username', username)
+          .eq('username', username.trim())
           .maybeSingle();
 
       if (userResponse == null) {
@@ -38,9 +44,14 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
 
-      _currentUser = User.fromJson(userResponse);
+      final user = User.fromJson(userResponse);
+      _currentUser = user;
       _isAdmin = false;
       _error = null;
+
+      // Update UserProvider
+      await _userProvider.setCurrentUser(user);
+
       return true;
     } catch (e) {
       _error = 'Username atau password salah';
@@ -89,6 +100,7 @@ class AuthProvider with ChangeNotifier {
     _currentUser = null;
     _error = null;
     _isAdmin = false;
+    _userProvider.clearCurrentUser();
     notifyListeners();
   }
 

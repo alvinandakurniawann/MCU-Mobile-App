@@ -184,4 +184,39 @@ class UserProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> setCurrentUser(User user) async {
+    _currentUser = user;
+    notifyListeners();
+  }
+
+  Future<bool> loadCurrentUser(String username) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _supabase
+          .from('users')
+          .select()
+          .eq('username', username.trim())
+          .single();
+
+      _currentUser = User.fromJson(response);
+      _error = null;
+      return true;
+    } catch (e) {
+      _error = 'Gagal memuat data user';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void clearCurrentUser() {
+    _currentUser = null;
+    _error = null;
+    notifyListeners();
+  }
 }

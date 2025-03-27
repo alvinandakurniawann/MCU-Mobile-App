@@ -22,11 +22,6 @@ class PasienProvider with ChangeNotifier {
           .select()
           .order('created_at', ascending: false);
 
-      if (response == null) {
-        _error = 'Gagal memuat data pasien';
-        return;
-      }
-
       _pasienList =
           (response as List).map((data) => Pasien.fromJson(data)).toList();
       _error = null;
@@ -49,11 +44,6 @@ class PasienProvider with ChangeNotifier {
           .insert(pasienData)
           .select()
           .single();
-
-      if (response == null) {
-        _error = 'Gagal menambahkan pasien';
-        return false;
-      }
 
       await loadPasienList();
       return true;
@@ -79,11 +69,6 @@ class PasienProvider with ChangeNotifier {
           .select()
           .single();
 
-      if (response == null) {
-        _error = 'Gagal mengupdate pasien';
-        return false;
-      }
-
       await loadPasienList();
       return true;
     } catch (e) {
@@ -107,11 +92,6 @@ class PasienProvider with ChangeNotifier {
           .eq('id', id)
           .select()
           .single();
-
-      if (response == null) {
-        _error = 'Gagal menghapus pasien';
-        return false;
-      }
 
       await loadPasienList();
       return true;

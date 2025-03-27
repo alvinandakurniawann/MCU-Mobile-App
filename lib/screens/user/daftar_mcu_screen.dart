@@ -63,9 +63,11 @@ class _DaftarMCUScreenState extends State<DaftarMCUScreen> {
     });
 
     try {
-      final user = context.read<UserProvider>().currentUser;
+      final userProvider = context.read<UserProvider>();
+      final user = userProvider.currentUser;
+
       if (user == null) {
-        throw Exception('User tidak ditemukan');
+        throw Exception('Silakan login kembali');
       }
 
       final success =
