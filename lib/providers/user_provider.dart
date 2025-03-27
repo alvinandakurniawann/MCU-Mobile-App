@@ -219,4 +219,56 @@ class UserProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  Future<bool> updateProfile({
+    required String namaLengkap,
+    required String noKtp,
+    required String jenisKelamin,
+    required String tempatLahir,
+    required String tanggalLahir,
+    required String alamat,
+    required String noHandphone,
+  }) async {
+    try {
+      _error = null;
+      _isLoading = true;
+      notifyListeners();
+
+      if (_currentUser == null) {
+        _error = 'User tidak ditemukan';
+        return false;
+      }
+
+      final now = DateTime.now().toIso8601String();
+      final response = await _supabase
+          .from('users')
+          .update({
+            'nama_lengkap': namaLengkap,
+            'no_ktp': noKtp,
+            'jenis_kelamin': jenisKelamin,
+            'tempat_lahir': tempatLahir,
+            'tanggal_lahir': tanggalLahir,
+            'alamat': alamat,
+            'no_handphone': noHandphone,
+            'updated_at': now,
+          })
+          .eq('id', _currentUser!.id)
+          .select()
+          .single();
+
+      if (response != null) {
+        _currentUser = User.fromJson(response);
+        return true;
+      } else {
+        _error = 'Gagal memperbarui profil';
+        return false;
+      }
+    } catch (e) {
+      _error = 'Terjadi kesalahan: ${e.toString()}';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

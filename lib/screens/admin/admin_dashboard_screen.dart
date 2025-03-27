@@ -21,16 +21,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _isLoading = true;
+    Future.microtask(() async {
+      if (!mounted) return;
+      await _loadData();
+    });
   }
 
   Future<void> _loadData() async {
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
       await Future.wait([
         context.read<PendaftaranProvider>().loadPendaftaranList(),
@@ -394,8 +392,118 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildLaporanContent() {
-    return const Center(
-      child: Text('Halaman Laporan'),
+    return Consumer<PendaftaranProvider>(
+      builder: (context, provider, child) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Laporan Pendaftaran MCU',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Total Pendaftaran',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${provider.pendaftaranList.length}',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Total Pendapatan',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Rp ${provider.pendaftaranList.fold(0.0, (sum, item) => sum + item.totalHarga).toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Riwayat Pendaftaran',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: Card(
+                  child: ListView.builder(
+                    itemCount: provider.pendaftaranList.length,
+                    itemBuilder: (context, index) {
+                      final pendaftaran = provider.pendaftaranList[index];
+                      return ListTile(
+                        title: Text(pendaftaran.user.namaLengkap),
+                        subtitle: Text(
+                          '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
+                        ),
+                        trailing: Text(
+                          'Rp ${pendaftaran.totalHarga.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -6,6 +6,8 @@ import 'package:logging/logging.dart';
 import 'screens/login_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/user/user_dashboard_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/register_admin_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/pasien_provider.dart';
@@ -66,10 +68,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProxyProvider<UserProvider, AuthProvider>(
           create: (_) => AuthProvider(),
-          update: (_, userProvider, authProvider) {
-            authProvider!.initialize(userProvider);
-            return authProvider;
-          },
+          update: (_, userProvider, authProvider) =>
+              authProvider!..initialize(userProvider),
         ),
         ChangeNotifierProvider(create: (_) => PasienProvider()),
         ChangeNotifierProvider(create: (_) => PaketMCUProvider()),
@@ -125,6 +125,8 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => const LoginScreen(),
+          '/register': (context) => const RegisterScreen(),
+          '/register-admin': (context) => const RegisterAdminScreen(),
           '/admin': (context) => const AdminDashboardScreen(),
           '/user': (context) => const UserDashboardScreen(),
         },

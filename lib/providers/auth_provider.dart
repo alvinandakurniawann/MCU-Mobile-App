@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 import '../models/user.dart';
 import 'user_provider.dart';
 
@@ -20,41 +22,46 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAdmin => _isAdmin;
 
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    final hash = sha256.convert(bytes);
+    return hash.toString();
+  }
+
   Future<bool> login(String username, String password) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
-      // Cek apakah user ada di tabel users
-      final userResponse = await _supabase
-          .from('users')
-          .select()
-          .eq('username', username.trim())
-          .maybeSingle();
+      _error = null;
+      _isLoading = true;
+      notifyListeners();
 
-      if (userResponse == null) {
+      final hashedPassword = _hashPassword(password);
+
+      final result =
+          await _supabase.from('users').select().eq('username', username);
+
+      if (result.isEmpty) {
         _error = 'Username tidak ditemukan';
         return false;
       }
 
-      // Verifikasi password
-      if (userResponse['password'] != password) {
+      final user = result.first;
+      if (user['password'] != hashedPassword) {
         _error = 'Password salah';
         return false;
       }
 
-      final user = User.fromJson(userResponse);
-      _currentUser = user;
+      _currentUser = User.fromJson(user);
       _isAdmin = false;
       _error = null;
 
       // Update UserProvider
-      await _userProvider.setCurrentUser(user);
+      if (_userProvider != null) {
+        await _userProvider.setCurrentUser(_currentUser);
+      }
 
       return true;
     } catch (e) {
-      _error = 'Username atau password salah';
+      _error = 'Terjadi kesalahan: ${e.toString()}';
       return false;
     } finally {
       _isLoading = false;
@@ -62,33 +69,70 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> register(Map<String, dynamic> userData) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  Future<bool> register({
+    required String username,
+    required String password,
+    required String namaLengkap,
+    required String noKtp,
+    String? email,
+    required String jenisKelamin,
+    required String tempatLahir,
+    required String tanggalLahir,
+    required String alamat,
+    required String noHandphone,
+  }) async {
     try {
-      // Cek apakah username sudah ada
-      final existingUser = await _supabase
-          .from('users')
-          .select()
-          .eq('username', userData['username'])
-          .maybeSingle();
+      _error = null;
+      _isLoading = true;
+      notifyListeners();
 
-      if (existingUser != null) {
+      // Check if username exists
+      final existingUser =
+          await _supabase.from('users').select().eq('username', username);
+      if (existingUser.isNotEmpty) {
         _error = 'Username sudah digunakan';
         return false;
       }
 
-      final response =
-          await _supabase.from('users').insert(userData).select().single();
+      // Check if KTP exists
+      final existingKtp =
+          await _supabase.from('users').select().eq('no_ktp', noKtp);
+      if (existingKtp.isNotEmpty) {
+        _error = 'Nomor KTP sudah terdaftar';
+        return false;
+      }
 
-      _currentUser = User.fromJson(response);
-      _isAdmin = false;
-      _error = null;
-      return true;
+      final hashedPassword = _hashPassword(password);
+      final now = DateTime.now().toIso8601String();
+
+      final response = await _supabase
+          .from('users')
+          .insert({
+            'username': username,
+            'password': hashedPassword,
+            'nama_lengkap': namaLengkap,
+            'no_ktp': noKtp,
+            'email': email,
+            'jenis_kelamin': jenisKelamin,
+            'tempat_lahir': tempatLahir,
+            'tanggal_lahir': tanggalLahir,
+            'alamat': alamat,
+            'no_handphone': noHandphone,
+            'created_at': now,
+            'updated_at': now,
+          })
+          .select()
+          .single();
+
+      if (response != null) {
+        _currentUser = User.fromJson(response);
+        return true;
+      } else {
+        _error = 'Gagal menyimpan data pengguna';
+        return false;
+      }
     } catch (e) {
-      _error = 'Terjadi kesalahan saat mendaftar';
+      _error = 'Terjadi kesalahan: ${e.toString()}';
       return false;
     } finally {
       _isLoading = false;
@@ -110,6 +154,8 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      final hashedPassword = _hashPassword(password);
+
       // Cek apakah admin ada di tabel admin
       final adminResponse = await _supabase
           .from('admin')
@@ -129,7 +175,8 @@ class AuthProvider with ChangeNotifier {
           .eq('username', username)
           .maybeSingle();
 
-      if (passwordCheck == null || passwordCheck['password'] != password) {
+      if (passwordCheck == null ||
+          passwordCheck['password'] != hashedPassword) {
         _error = 'Password salah';
         return false;
       }
@@ -147,57 +194,38 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> registerAdmin(Map<String, dynamic> adminData) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  Future<bool> registerAdmin({
+    required String username,
+    required String password,
+    required String namaLengkap,
+    required String jabatan,
+  }) async {
     try {
-      // Validasi field yang diperlukan
-      if (!adminData.containsKey('username') ||
-          !adminData.containsKey('password') ||
-          !adminData.containsKey('nama_lengkap') ||
-          !adminData.containsKey('jabatan')) {
-        _error = 'Data admin tidak lengkap';
-        return false;
-      }
-
-      // Cek apakah username admin sudah ada
+      // Cek username yang sudah ada
       final existingAdmin = await _supabase
           .from('admin')
-          .select('username')
-          .eq('username', adminData['username'])
+          .select()
+          .eq('username', username)
           .maybeSingle();
 
       if (existingAdmin != null) {
-        _error = 'Username admin sudah digunakan';
-        return false;
+        throw Exception('Username admin sudah digunakan');
       }
 
-      // Hanya masukkan field yang diperlukan
-      final adminDataToInsert = {
-        'username': adminData['username'],
-        'password': adminData['password'],
-        'nama_lengkap': adminData['nama_lengkap'],
-        'jabatan': adminData['jabatan'],
-      };
+      // Hash password sebelum disimpan
+      final hashedPassword = _hashPassword(password);
 
-      final response = await _supabase
-          .from('admin')
-          .insert(adminDataToInsert)
-          .select('id, username, nama_lengkap, jabatan')
-          .single();
+      // Insert admin baru
+      await _supabase.from('admin').insert({
+        'username': username,
+        'password': hashedPassword,
+        'nama_lengkap': namaLengkap,
+        'jabatan': jabatan,
+      });
 
-      _currentUser = response;
-      _isAdmin = true;
-      _error = null;
       return true;
     } catch (e) {
-      _error = 'Terjadi kesalahan saat mendaftar admin';
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      rethrow;
     }
   }
 }

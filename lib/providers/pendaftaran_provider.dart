@@ -13,8 +13,9 @@ class PendaftaranProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> loadPendaftaranList() async {
+    if (_isLoading) return;
+
     _isLoading = true;
-    _error = null;
     notifyListeners();
 
     try {
@@ -43,8 +44,9 @@ class PendaftaranProvider with ChangeNotifier {
     required DateTime tanggalPendaftaran,
     required double totalHarga,
   }) async {
+    if (_isLoading) return false;
+
     _isLoading = true;
-    _error = null;
     notifyListeners();
 
     try {
