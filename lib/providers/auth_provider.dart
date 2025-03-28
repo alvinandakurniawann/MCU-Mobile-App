@@ -113,7 +113,7 @@ class AuthProvider with ChangeNotifier {
             'nama_lengkap': namaLengkap,
             'no_ktp': noKtp,
             'email': email,
-            'jenis_kelamin': jenisKelamin,
+            'jenis_kelamin': jenisKelamin.toUpperCase(),
             'tempat_lahir': tempatLahir,
             'tanggal_lahir': tanggalLahir,
             'alamat': alamat,

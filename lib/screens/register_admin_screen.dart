@@ -48,7 +48,7 @@ class _RegisterAdminScreenState extends State<RegisterAdminScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
+        Navigator.pushReplacementNamed(context, '/');
       }
     } catch (e) {
       if (mounted) {

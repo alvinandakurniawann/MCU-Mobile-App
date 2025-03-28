@@ -39,9 +39,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _emailController.text,
         namaLengkap: '', // Akan diisi di edit profil
         noKtp: '', // Akan diisi di edit profil
-        jenisKelamin: '', // Akan diisi di edit profil
+        jenisKelamin:
+            'L', // Menggunakan single character sesuai constraint database
         tempatLahir: '', // Akan diisi di edit profil
-        tanggalLahir: '', // Akan diisi di edit profil
+        tanggalLahir: DateTime.now().toIso8601String(), // Default value
         alamat: '', // Akan diisi di edit profil
         noHandphone: '', // Akan diisi di edit profil
       );
@@ -51,9 +52,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SnackBar(
             content: Text('Registrasi berhasil! Silakan lengkapi profil Anda.'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
-        Navigator.pushReplacementNamed(context, '/profil');
+
+        // Menunggu sebentar agar snackbar dapat dibaca
+        await Future.delayed(const Duration(seconds: 2));
+
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/',
+            (route) => false,
+          );
+        }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
