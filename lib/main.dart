@@ -4,13 +4,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logging/logging.dart';
 import 'screens/login_screen.dart';
-import 'screens/admin/admin_dashboard_screen.dart';
-import 'screens/user/user_dashboard_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/register_admin_screen.dart';
+import 'screens/user/user_dashboard_screen.dart';
+import 'screens/admin/admin_dashboard_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/user_provider.dart';
-import 'providers/pasien_provider.dart';
 import 'providers/paket_mcu_provider.dart';
 import 'providers/pendaftaran_provider.dart';
 
@@ -71,7 +70,6 @@ class MyApp extends StatelessWidget {
           update: (_, userProvider, authProvider) =>
               authProvider!..initialize(userProvider),
         ),
-        ChangeNotifierProvider(create: (_) => PasienProvider()),
         ChangeNotifierProvider(create: (_) => PaketMCUProvider()),
         ChangeNotifierProvider(create: (_) => PendaftaranProvider()),
       ],
@@ -126,9 +124,9 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
-          '/register-admin': (context) => const RegisterAdminScreen(),
-          '/admin': (context) => const AdminDashboardScreen(),
-          '/user': (context) => const UserDashboardScreen(),
+          '/abp8': (context) => const RegisterAdminScreen(),
+          '/user-dashboard': (context) => const UserDashboardScreen(),
+          '/admin-dashboard': (context) => const AdminDashboardScreen(),
         },
       ),
     );
