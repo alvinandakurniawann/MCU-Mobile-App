@@ -180,6 +180,37 @@ class _DaftarMCUScreenState extends State<DaftarMCUScreen> {
                 },
               ),
               const SizedBox(height: 16),
+              if (_selectedPaket != null) ...[
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedPaket!.namaPaket,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(_selectedPaket!.deskripsi),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Harga: Rp ${_selectedPaket!.harga.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               ListTile(
                 title: const Text('Tanggal Pemeriksaan'),
                 subtitle: Text(
@@ -202,16 +233,6 @@ class _DaftarMCUScreenState extends State<DaftarMCUScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              if (_selectedPaket != null) ...[
-                Text(
-                  'Total Biaya: Rp ${_selectedPaket!.harga}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
