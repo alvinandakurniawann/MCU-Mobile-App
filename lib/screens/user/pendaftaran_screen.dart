@@ -56,10 +56,6 @@ class _PendaftaranScreenState extends State<PendaftaranScreen> {
                           color: Colors.green,
                         ),
                       ),
-                      Text(
-                        'Durasi: ${paket.durasiPemeriksaan} menit',
-                        style: const TextStyle(fontSize: 14),
-                      ),
                     ],
                   ),
                 ),

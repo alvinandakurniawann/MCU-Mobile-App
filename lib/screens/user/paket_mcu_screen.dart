@@ -58,7 +58,6 @@ class _PaketMCUScreenState extends State<PaketMCUScreen> {
                       Text(paket.deskripsi),
                       const SizedBox(height: 8),
                       Text('Harga: Rp ${paket.harga.toStringAsFixed(0)}'),
-                      Text('Durasi: ${paket.durasiPemeriksaan} menit'),
                     ],
                   ),
                   trailing: ElevatedButton(

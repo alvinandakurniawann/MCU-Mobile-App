@@ -15,7 +15,6 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
   final _namaPaketController = TextEditingController();
   final _deskripsiController = TextEditingController();
   final _hargaController = TextEditingController();
-  final _durasiController = TextEditingController();
   bool _isLoading = false;
   PaketMCU? _selectedPaket;
 
@@ -34,7 +33,6 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
     _namaPaketController.dispose();
     _deskripsiController.dispose();
     _hargaController.dispose();
-    _durasiController.dispose();
     super.dispose();
   }
 
@@ -50,7 +48,7 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
         'nama_paket': _namaPaketController.text,
         'deskripsi': _deskripsiController.text,
         'harga': double.parse(_hargaController.text),
-        'durasi_pemeriksaan': int.parse(_durasiController.text),
+        'durasi_pemeriksaan': 0, // Default value
       };
 
       bool success;
@@ -106,7 +104,6 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
       _namaPaketController.clear();
       _deskripsiController.clear();
       _hargaController.clear();
-      _durasiController.clear();
     });
   }
 
@@ -116,7 +113,6 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
       _namaPaketController.text = paket.namaPaket;
       _deskripsiController.text = paket.deskripsi;
       _hargaController.text = paket.harga.toString();
-      _durasiController.text = paket.durasiPemeriksaan.toString();
     });
   }
 
@@ -216,24 +212,6 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _durasiController,
-                    decoration: const InputDecoration(
-                      labelText: 'Durasi Pemeriksaan (menit)',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Durasi tidak boleh kosong';
-                      }
-                      if (int.tryParse(value) == null) {
-                        return 'Durasi harus berupa angka';
-                      }
-                      return null;
-                    },
-                  ),
                   const SizedBox(height: 24),
                   Row(
                     children: [
@@ -300,7 +278,7 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
                       child: ListTile(
                         title: Text(paket.namaPaket),
                         subtitle: Text(
-                          'Rp ${paket.harga} - ${paket.durasiPemeriksaan} menit',
+                          'Rp ${paket.harga}',
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
