@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,12 +16,89 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isAdmin = false;
   bool _isLoading = false;
+  bool _rememberMe = false;
+  SharedPreferences? _prefs;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePrefs();
+  }
+
+  Future<void> _initializePrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    if (!_initialized) {
+      await _checkSavedCredentials();
+      _initialized = true;
+    }
+  }
+
+  Future<void> _checkSavedCredentials() async {
+    if (_prefs == null) return;
+
+    try {
+      final savedUsername = _prefs!.getString('username');
+      final savedPassword = _prefs!.getString('password');
+      final savedIsAdmin = _prefs!.getBool('isAdmin') ?? false;
+      final rememberMe = _prefs!.getBool('rememberMe') ?? false;
+
+      if (rememberMe && savedUsername != null && savedPassword != null) {
+        setState(() {
+          _usernameController.text = savedUsername;
+          _passwordController.text = savedPassword;
+          _isAdmin = savedIsAdmin;
+          _rememberMe = true;
+        });
+
+        // Auto login jika remember me aktif
+        final authProvider = context.read<AuthProvider>();
+        bool success;
+
+        if (_isAdmin) {
+          success = await authProvider.loginAdmin(savedUsername, savedPassword);
+        } else {
+          success = await authProvider.login(savedUsername, savedPassword);
+        }
+
+        if (success && mounted) {
+          if (_isAdmin) {
+            Navigator.pushReplacementNamed(context, '/admin');
+          } else {
+            Navigator.pushReplacementNamed(context, '/user');
+          }
+        }
+      }
+    } catch (e) {
+      // Jika terjadi error, hapus kredensial tersimpan
+      await _prefs!.remove('username');
+      await _prefs!.remove('password');
+      await _prefs!.remove('isAdmin');
+      await _prefs!.remove('rememberMe');
+    }
+  }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveCredentials() async {
+    if (_prefs == null) return;
+
+    if (_rememberMe) {
+      await _prefs!.setString('username', _usernameController.text);
+      await _prefs!.setString('password', _passwordController.text);
+      await _prefs!.setBool('isAdmin', _isAdmin);
+      await _prefs!.setBool('rememberMe', true);
+    } else {
+      await _prefs!.remove('username');
+      await _prefs!.remove('password');
+      await _prefs!.remove('isAdmin');
+      await _prefs!.remove('rememberMe');
+    }
   }
 
   Future<void> _login() async {
@@ -47,6 +125,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (success) {
+        // Simpan kredensial jika remember me dicentang
+        await _saveCredentials();
+
         if (_isAdmin) {
           Navigator.pushReplacementNamed(context, '/admin');
         } else {
@@ -143,6 +224,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           onChanged: (value) {
                             setState(() {
                               _isAdmin = value;
+                            });
+                          },
+                        ),
+                        CheckboxListTile(
+                          title: const Text('Remember Me'),
+                          value: _rememberMe,
+                          onChanged: (value) {
+                            setState(() {
+                              _rememberMe = value ?? false;
                             });
                           },
                         ),

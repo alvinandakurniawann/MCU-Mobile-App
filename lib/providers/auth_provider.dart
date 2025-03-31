@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import '../models/user.dart';
@@ -140,11 +141,19 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  void logout() {
+  Future<void> logout() async {
     _currentUser = null;
     _error = null;
     _isAdmin = false;
     _userProvider.clearCurrentUser();
+
+    // Hapus kredensial yang tersimpan
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('username');
+    await prefs.remove('password');
+    await prefs.remove('isAdmin');
+    await prefs.remove('rememberMe');
+
     notifyListeners();
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/paket_mcu_provider.dart';
 import '../../models/paket_mcu.dart';
 
@@ -47,8 +48,8 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
       final paketData = {
         'nama_paket': _namaPaketController.text,
         'deskripsi': _deskripsiController.text,
-        'harga': double.parse(_hargaController.text),
-        'durasi_pemeriksaan': 0, // Default value
+        'harga': double.parse(
+            _hargaController.text.replaceAll(RegExp(r'[^0-9]'), '')),
       };
 
       bool success;
@@ -202,11 +203,35 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
                       prefixText: 'Rp ',
                     ),
                     keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      if (value.isNotEmpty) {
+                        // Hapus semua karakter non-angka
+                        final numericValue =
+                            value.replaceAll(RegExp(r'[^0-9]'), '');
+                        if (numericValue.isNotEmpty) {
+                          // Format angka dengan pemisah ribuan
+                          final formattedValue = NumberFormat.currency(
+                            locale: 'id_ID',
+                            symbol: '',
+                            decimalDigits: 0,
+                          ).format(int.parse(numericValue));
+
+                          // Update controller dengan nilai yang sudah diformat
+                          _hargaController.value = TextEditingValue(
+                            text: formattedValue,
+                            selection: TextSelection.collapsed(
+                                offset: formattedValue.length),
+                          );
+                        }
+                      }
+                    },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Harga tidak boleh kosong';
                       }
-                      if (double.tryParse(value) == null) {
+                      final numericValue =
+                          value.replaceAll(RegExp(r'[^0-9]'), '');
+                      if (int.tryParse(numericValue) == null) {
                         return 'Harga harus berupa angka';
                       }
                       return null;
@@ -277,8 +302,22 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
                     return Card(
                       child: ListTile(
                         title: Text(paket.namaPaket),
-                        subtitle: Text(
-                          'Rp ${paket.harga}',
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              NumberFormat.currency(
+                                locale: 'id_ID',
+                                symbol: 'Rp ',
+                                decimalDigits: 0,
+                              ).format(paket.harga),
+                            ),
+                            Text(
+                              paket.deskripsi,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
