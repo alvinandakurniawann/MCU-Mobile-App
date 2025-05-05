@@ -17,6 +17,12 @@ class UserDashboardScreen extends StatefulWidget {
 class _UserDashboardScreenState extends State<UserDashboardScreen> {
   int _selectedIndex = 0;
   bool _isLoading = true;
+  int _carouselIndex = 0;
+
+  final List<String> _carouselImages = [
+    'assets/images/carousel1.jpg',
+    'assets/images/carousel2.jpg',
+  ];
 
   @override
   void initState() {
@@ -211,7 +217,53 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: isWebLayout ? 24 : 16),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: isWebLayout ? 200 : 175,
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        PageView.builder(
+                          itemCount: _carouselImages.length,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _carouselIndex = index;
+                            });
+                          },
+                          itemBuilder: (context, index) {
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Image.asset(
+                                _carouselImages[index],
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              ),
+                            );
+                          },
+                        ),
+                        Positioned(
+                          bottom: 12,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(_carouselImages.length, (index) {
+                              return Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _carouselIndex == index
+                                      ? Colors.redAccent
+                                      : Colors.grey[300],
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   Text(
                     'Jadwal MCU Mendatang',
                     style: TextStyle(
@@ -232,14 +284,17 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
 
   Widget _buildUpcomingMCUList(List<dynamic> userPendaftaran) {
     if (userPendaftaran.isEmpty) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            'Tidak ada jadwal MCU mendatang',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
+      return const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Tidak ada jadwal MCU mendatang',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
         ),

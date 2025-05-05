@@ -10,7 +10,8 @@ class JadwalAdminScreen extends StatefulWidget {
 }
 
 class _JadwalAdminScreenState extends State<JadwalAdminScreen> {
-  DateTime _selectedDate = DateTime.now();
+  DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
+  DateTime _endDate = DateTime(DateTime.now().year, DateTime.now().month + 1, 0);
   bool _isLoading = false;
 
   @override
@@ -23,16 +24,33 @@ class _JadwalAdminScreenState extends State<JadwalAdminScreen> {
     });
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectStartDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
+      initialDate: _startDate,
+      firstDate: DateTime(2000),
+      lastDate: _endDate,
     );
-    if (picked != null && picked != _selectedDate && mounted) {
+    if (picked != null && picked != _startDate && mounted) {
       setState(() {
-        _selectedDate = picked;
+        _startDate = picked;
+        if (_endDate.isBefore(_startDate)) {
+          _endDate = _startDate;
+        }
+      });
+    }
+  }
+
+  Future<void> _selectEndDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _endDate,
+      firstDate: _startDate,
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null && picked != _endDate && mounted) {
+      setState(() {
+        _endDate = picked;
       });
     }
   }
@@ -101,15 +119,45 @@ class _JadwalAdminScreenState extends State<JadwalAdminScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    'Tanggal: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                    style: const TextStyle(fontSize: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Dari: ${_startDate.day}/${_startDate.month}/${_startDate.year}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Sampai: ${_endDate.day}/${_endDate.month}/${_endDate.year}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ],
                   ),
                 ),
-                ElevatedButton.icon(
-                  onPressed: _isLoading ? null : () => _selectDate(context),
-                  icon: const Icon(Icons.calendar_today),
-                  label: const Text('Pilih Tanggal'),
+                Column(
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _isLoading ? null : () => _selectStartDate(context),
+                      icon: const Icon(Icons.date_range, size: 18),
+                      label: const Text('Dari', style: TextStyle(fontSize: 13)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: _isLoading ? null : () => _selectEndDate(context),
+                      icon: const Icon(Icons.date_range, size: 18),
+                      label: const Text('Sampai', style: TextStyle(fontSize: 13)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -128,9 +176,8 @@ class _JadwalAdminScreenState extends State<JadwalAdminScreen> {
                 }
 
                 final filteredPendaftaran = provider.pendaftaranList.where((p) {
-                  return p.tanggalPendaftaran.year == _selectedDate.year &&
-                      p.tanggalPendaftaran.month == _selectedDate.month &&
-                      p.tanggalPendaftaran.day == _selectedDate.day;
+                  return p.tanggalPendaftaran.isAfter(_startDate.subtract(const Duration(days: 1))) &&
+                         p.tanggalPendaftaran.isBefore(_endDate.add(const Duration(days: 1)));
                 }).toList();
 
                 if (filteredPendaftaran.isEmpty) {
