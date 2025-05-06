@@ -276,12 +276,91 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('Detail Pemeriksaan'),
-                                content: const Text('Pemeriksaan darah lengkap untuk mengetahui kondisi kesehatan darah Anda.'),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: Row(
+                                  children: [
+                                    Image.asset(
+                                      'assets/icons/darah.png',
+                                      width: 32,
+                                      height: 32,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Detail Pemeriksaan Hematologi',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                content: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'Komponen Pemeriksaan:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Wrap(
+                                        spacing: 8,
+                                        children: [
+                                          _buildChip('Hemoglobin'),
+                                          _buildChip('Lekosit'),
+                                          _buildChip('Trombosit'),
+                                          _buildChip('Hematokrit'),
+                                          _buildChip('Hitung Jenis'),
+                                          _buildChip('LED'),
+                                          _buildChip('Eritosit'),
+                                          _buildChip('MC'),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      const Text(
+                                        'Deskripsi:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Pemeriksaan Hematologi merupakan pemeriksaan dasar yang digunakan secara luas mulai sebagai pemeriksaan penyaring, diagnosis maupun untuk mengikuti perkembangan penyakit; diantaranya penyakit infeksi, kelainan darah, penyakit degeneratif, dan lainnya.',
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildInfoSection(
+                                        'Spesimen Pemeriksaan',
+                                        'Darah dengan antikoagulan EDTA',
+                                        Icons.bloodtype,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _buildInfoSection(
+                                        'Persiapan Pemeriksaan',
+                                        'Tidak ada persiapan khusus',
+                                        Icons.info_outline,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.of(context).pop(),
-                                    child: const Text('Tutup'),
+                                    child: const Text(
+                                      'Tutup',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -295,12 +374,68 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('Detail Pemeriksaan'),
-                                content: const Text('Pemeriksaan fungsi dan kesehatan jantung.'),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: Row(
+                                  children: [
+                                    Image.asset(
+                                      'assets/icons/jantung.png',
+                                      width: 32,
+                                      height: 32,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Detail Pemeriksaan Jantung',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                content: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'Deskripsi:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Troponin T adalah protein spesfik yang hanya ada di otot jantung. Pemeriksaan Troponin T digunakan untuk evaluasi dugaan adanya kelainan iskemi koroner akut, misalnya pada kasus nyeri dada. Dibanding dengan cardiac marker lainnya (misalnya CK-MB), pemeriksaan troponin lebih spesifik dan sensitif dalam medeteksi adanya kerusakan otot jantung.',
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildInfoSection(
+                                        'Spesimen Pemeriksaan',
+                                        'Darah',
+                                        Icons.bloodtype,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _buildInfoSection(
+                                        'Persiapan Pemeriksaan',
+                                        'Tidak ada persiapan khusus',
+                                        Icons.info_outline,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.of(context).pop(),
-                                    child: const Text('Tutup'),
+                                    child: const Text(
+                                      'Tutup',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -314,12 +449,68 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('Detail Pemeriksaan'),
-                                content: const Text('Pemeriksaan kesehatan paru-paru dan sistem pernapasan.'),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: Row(
+                                  children: [
+                                    Image.asset(
+                                      'assets/icons/paruparu.png',
+                                      width: 32,
+                                      height: 32,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Detail Pemeriksaan Paru-paru',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                content: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'Deskripsi:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Interferon-Gamma Release Assays (IGRA) adalah pemeriksaan darah yang digunakan untuk membantu dalam diagnosis penyakit Tuberkulosis (TB) maupun Infeksi Laten Tuberkulosis (LTBI). Pemeriksaan ini mengukur respon imun seluler terhadap M. Tuberculosis (M. TBC). Hasil Test IGRA yang positip mengindikasikan adanya infeksi oleh kuman TBC.',
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildInfoSection(
+                                        'Spesimen Pemeriksaan',
+                                        'Darah (plasma)',
+                                        Icons.bloodtype,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _buildInfoSection(
+                                        'Persiapan Pemeriksaan',
+                                        'Tidak ada persiapan khusus',
+                                        Icons.info_outline,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.of(context).pop(),
-                                    child: const Text('Tutup'),
+                                    child: const Text(
+                                      'Tutup',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -333,12 +524,68 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('Detail Pemeriksaan'),
-                                content: const Text('Pemeriksaan kesehatan saluran pencernaan dan usus.'),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: Row(
+                                  children: [
+                                    Image.asset(
+                                      'assets/icons/usus.png',
+                                      width: 32,
+                                      height: 32,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Detail Pemeriksaan Usus',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                content: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'Deskripsi:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Fecal Calprotectin adalah protein dalam faeces yang dikeluarkan ketika terjadi proses peradangan di usus. Pemeriksaan Fecal Calprotectin pada umumnya digunakan untuk membantu diagnosa dan monitoring penyakit inflammatory bowel disease (IBD), disamping menilai diare kronik karena inflamasi. Kadar Calprotectin meningkat didapatkan pada penyakit IBD, seperti Crohn\'s Disease atau ulcerative colitis.',
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildInfoSection(
+                                        'Spesimen Pemeriksaan',
+                                        'Faeses',
+                                        Icons.science,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _buildInfoSection(
+                                        'Persiapan Pemeriksaan',
+                                        'Tidak ada persiapan khusus',
+                                        Icons.info_outline,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.of(context).pop(),
-                                    child: const Text('Tutup'),
+                                    child: const Text(
+                                      'Tutup',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -447,6 +694,52 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         ),
       ),
       backgroundColor: color,
+    );
+  }
+
+  Widget _buildChip(String label) {
+    return Chip(
+      label: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+        ),
+      ),
+      backgroundColor: Colors.blue,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+    );
+  }
+
+  Widget _buildInfoSection(String title, String content, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.blue, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(content),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

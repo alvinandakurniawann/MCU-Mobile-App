@@ -126,7 +126,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
-          '/abp8': (context) => const RegisterAdminScreen(),
+          '/register-admin': (context) => const RegisterAdminScreen(),
           '/admin': (context) => const AdminDashboardScreen(),
           '/user': (context) => const UserDashboardScreen(),
         },

@@ -47,8 +47,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: const Text(
+          'Admin Dashboard',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.blue,
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -78,6 +84,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       _selectedIndex = index;
                     });
                   },
+                  backgroundColor: Colors.white,
+                  elevation: 2,
                   destinations: const [
                     NavigationRailDestination(
                       icon: Icon(Icons.dashboard),
@@ -119,36 +127,51 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Expanded(
                 child: _buildSelectedScreen(),
               ),
-              BottomNavigationBar(
-                currentIndex: _selectedIndex,
-                onTap: (index) {
-                  setState(() {
-                    _selectedIndex = index;
-                  });
-                },
-                type: BottomNavigationBarType.fixed,
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.dashboard),
-                    label: 'Dashboard',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.medical_services),
-                    label: 'Paket MCU',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.people),
-                    label: 'Pasien',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.schedule),
-                    label: 'Jadwal',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.bar_chart),
-                    label: 'Laporan',
-                  ),
-                ],
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: BottomNavigationBar(
+                  currentIndex: _selectedIndex,
+                  onTap: (index) {
+                    setState(() {
+                      _selectedIndex = index;
+                    });
+                  },
+                  type: BottomNavigationBarType.fixed,
+                  backgroundColor: Colors.white,
+                  selectedItemColor: Colors.blue,
+                  unselectedItemColor: Colors.grey,
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.dashboard),
+                      label: 'Dashboard',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.medical_services),
+                      label: 'Paket MCU',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.people),
+                      label: 'Pasien',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.schedule),
+                      label: 'Jadwal',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.bar_chart),
+                      label: 'Laporan',
+                    ),
+                  ],
+                ),
               ),
             ],
           );
@@ -263,26 +286,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount:
-                        pendaftaranProvider.pendaftaranList.take(5).length,
-                    itemBuilder: (context, index) {
-                      final pendaftaran =
-                          pendaftaranProvider.pendaftaranList[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          title: Text(pendaftaran.user.namaLengkap),
-                          subtitle: Text(
-                            '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
-                          ),
-                          trailing: _buildStatusChip(pendaftaran.status),
-                        ),
-                      );
-                    },
-                  ),
+                  _buildRecentRegistrations(pendaftaranProvider.pendaftaranList),
                 ],
               ),
             );
@@ -292,17 +296,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildStatCard(
-      String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
@@ -310,11 +312,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               size: 32,
               color: color,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               value,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
@@ -323,12 +325,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Text(
               title,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 14,
                 color: Colors.grey,
               ),
               textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -336,164 +336,330 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildStatusChip(String status) {
-    Color color;
-    IconData icon;
-
-    switch (status.toLowerCase()) {
-      case 'pending':
-        color = Colors.orange;
-        icon = Icons.pending;
-        break;
-      case 'confirmed':
-        color = Colors.blue;
-        icon = Icons.check_circle;
-        break;
-      case 'completed':
-        color = Colors.green;
-        icon = Icons.done_all;
-        break;
-      case 'cancelled':
-        color = Colors.red;
-        icon = Icons.cancel;
-        break;
-      default:
-        color = Colors.grey;
-        icon = Icons.help;
+  Widget _buildRecentRegistrations(List<dynamic> pendaftaranList) {
+    if (pendaftaranList.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Belum ada pendaftaran',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
     }
 
-    return Chip(
-      avatar: Icon(
-        icon,
-        color: Colors.white,
-        size: 16,
+    // Sort by date, most recent first
+    pendaftaranList.sort((a, b) => b.tanggalPendaftaran.compareTo(a.tanggalPendaftaran));
+
+    // Take only the 5 most recent
+    final recentPendaftaran = pendaftaranList.take(5).toList();
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
       ),
-      label: Text(
-        status,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-        ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: recentPendaftaran.length,
+        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final pendaftaran = recentPendaftaran[index];
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
+              child: Icon(
+                _getStatusIcon(pendaftaran.status),
+                color: _getStatusColor(pendaftaran.status),
+              ),
+            ),
+            title: Text(
+              pendaftaran.user.namaLengkap,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
+            ),
+            trailing: Chip(
+              label: Text(
+                pendaftaran.status,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                ),
+              ),
+              backgroundColor: _getStatusColor(pendaftaran.status),
+            ),
+          );
+        },
       ),
-      backgroundColor: color,
     );
   }
 
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'confirmed':
+        return Colors.blue;
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Icons.pending;
+      case 'confirmed':
+        return Icons.check_circle;
+      case 'completed':
+        return Icons.done_all;
+      case 'cancelled':
+        return Icons.cancel;
+      default:
+        return Icons.help;
+    }
+  }
+
   Widget _buildPaketMcuContent() {
-    return const PaketMCUAdminScreen();
-  }
-
-  Widget _buildPasienContent() {
-    return const PasienAdminScreen();
-  }
-
-  Widget _buildJadwalContent() {
-    return const JadwalAdminScreen();
-  }
-
-  Widget _buildLaporanContent() {
-    return Consumer<PendaftaranProvider>(
+    return Consumer<PaketMCUProvider>(
       builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Laporan Pendaftaran MCU',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Total Pendaftaran',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${provider.pendaftaranList.length}',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  const Text(
+                    'Paket MCU',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Total Pendapatan',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Rp ${provider.pendaftaranList.fold(0.0, (sum, item) => sum + item.totalHarga).toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // TODO: Implement add new package
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Tambah Paket'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.5,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: provider.paketList.length,
+                  itemBuilder: (context, index) {
+                    final paket = provider.paketList[index];
+                    return Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    paket.namaPaket,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    // TODO: Implement edit package
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Rp ${paket.harga.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Expanded(
+                              child: Text(
+                                paket.deskripsi,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPasienContent() {
+    return Consumer<PendaftaranProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               const Text(
-                'Riwayat Pendaftaran',
+                'Daftar Pasien',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Cari pasien...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.blue),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               Expanded(
                 child: Card(
-                  child: ListView.builder(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(16),
                     itemCount: provider.pendaftaranList.length,
+                    separatorBuilder: (context, index) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final pendaftaran = provider.pendaftaranList[index];
                       return ListTile(
-                        title: Text(pendaftaran.user.namaLengkap),
-                        subtitle: Text(
-                          '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.blue.withOpacity(0.1),
+                          child: Text(
+                            pendaftaran.user.namaLengkap[0].toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                        trailing: Text(
-                          'Rp ${pendaftaran.totalHarga.toStringAsFixed(0)}',
+                        title: Text(
+                          pendaftaran.user.namaLengkap,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
                           ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(pendaftaran.user.email ?? 'No email'),
+                            Text(
+                              'Paket: ${pendaftaran.paketMcu.namaPaket}',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: Chip(
+                          label: Text(
+                            pendaftaran.status,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                          backgroundColor: _getStatusColor(pendaftaran.status),
                         ),
                       );
                     },
@@ -505,5 +671,262 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         );
       },
     );
+  }
+
+  Widget _buildJadwalContent() {
+    return Consumer<PendaftaranProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Jadwal MCU',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // TODO: Implement add new schedule
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Tambah Jadwal'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: provider.pendaftaranList.length,
+                    separatorBuilder: (context, index) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final pendaftaran = provider.pendaftaranList[index];
+                      return ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                pendaftaran.tanggalPendaftaran.day.toString(),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              Text(
+                                _getMonthName(pendaftaran.tanggalPendaftaran.month),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        title: Text(
+                          pendaftaran.user.namaLengkap,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.hour}:${pendaftaran.tanggalPendaftaran.minute.toString().padLeft(2, '0')}',
+                        ),
+                        trailing: Chip(
+                          label: Text(
+                            pendaftaran.status,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                          backgroundColor: _getStatusColor(pendaftaran.status),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLaporanContent() {
+    return Consumer<PendaftaranProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        final totalPendaftaran = provider.pendaftaranList.length;
+        final totalPendapatan = provider.pendaftaranList.fold(
+          0.0,
+          (sum, item) => sum + item.totalHarga,
+        );
+        final completedPendaftaran = provider.pendaftaranList
+            .where((p) => p.status.toLowerCase() == 'completed')
+            .length;
+
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Laporan MCU',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 3,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.5,
+                children: [
+                  _buildStatCard(
+                    'Total Pendaftaran',
+                    totalPendaftaran.toString(),
+                    Icons.assignment,
+                    Colors.blue,
+                  ),
+                  _buildStatCard(
+                    'Total Pendapatan',
+                    'Rp ${totalPendapatan.toStringAsFixed(0)}',
+                    Icons.attach_money,
+                    Colors.green,
+                  ),
+                  _buildStatCard(
+                    'MCU Selesai',
+                    completedPendaftaran.toString(),
+                    Icons.check_circle,
+                    Colors.purple,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                'Riwayat Pendaftaran',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: provider.pendaftaranList.length,
+                    separatorBuilder: (context, index) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final pendaftaran = provider.pendaftaranList[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
+                          child: Icon(
+                            _getStatusIcon(pendaftaran.status),
+                            color: _getStatusColor(pendaftaran.status),
+                          ),
+                        ),
+                        title: Text(
+                          pendaftaran.user.namaLengkap,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
+                        ),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'Rp ${pendaftaran.totalHarga.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Chip(
+                              label: Text(
+                                pendaftaran.status,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              backgroundColor: _getStatusColor(pendaftaran.status),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return months[month - 1];
   }
 }
