@@ -263,6 +263,91 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 90,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        _MenuCard(
+                          iconPath: 'assets/icons/darah.png',
+                          label: 'Hematologi',
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Detail Pemeriksaan'),
+                                content: const Text('Pemeriksaan darah lengkap untuk mengetahui kondisi kesehatan darah Anda.'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Tutup'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        _MenuCard(
+                          iconPath: 'assets/icons/jantung.png',
+                          label: 'Jantung',
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Detail Pemeriksaan'),
+                                content: const Text('Pemeriksaan fungsi dan kesehatan jantung.'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Tutup'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        _MenuCard(
+                          iconPath: 'assets/icons/paruparu.png',
+                          label: 'Paru-paru',
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Detail Pemeriksaan'),
+                                content: const Text('Pemeriksaan kesehatan paru-paru dan sistem pernapasan.'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Tutup'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        _MenuCard(
+                          iconPath: 'assets/icons/usus.png',
+                          label: 'Usus',
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Detail Pemeriksaan'),
+                                content: const Text('Pemeriksaan kesehatan saluran pencernaan dan usus.'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Tutup'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   Text(
                     'Jadwal MCU Mendatang',
@@ -362,6 +447,57 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         ),
       ),
       backgroundColor: color,
+    );
+  }
+}
+
+class _MenuCard extends StatelessWidget {
+  final String iconPath;
+  final String label;
+  final VoidCallback? onTap;
+  const _MenuCard({required this.iconPath, required this.label, this.onTap, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 2,
+          child: SizedBox(
+            width: 140,
+            height: 80,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: Image.asset(
+                    iconPath,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported, size: 32, color: Colors.grey),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.left,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
