@@ -144,9 +144,9 @@ class _RegisterAdminScreenState extends State<RegisterAdminScreen> with SingleTi
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF1A237E), // Deep Indigo
-              const Color(0xFF0D47A1), // Dark Blue
-              const Color(0xFF01579B), // Light Blue
+              Color(0xFF1A237E),
+              Color(0xFF5B86E5),
+              Color(0xFF36D1C4),
             ],
           ),
         ),

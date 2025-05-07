@@ -10,6 +10,7 @@ class User {
   final String alamat;
   final String noHandphone;
   final String? email;
+  final String? fotoProfil;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -25,6 +26,7 @@ class User {
     required this.alamat,
     required this.noHandphone,
     this.email,
+    this.fotoProfil,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -42,6 +44,7 @@ class User {
       alamat: json['alamat'],
       noHandphone: json['no_handphone'],
       email: json['email'],
+      fotoProfil: json['foto_profil'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
@@ -60,6 +63,7 @@ class User {
       'alamat': alamat,
       'no_handphone': noHandphone,
       'email': email,
+      'foto_profil': fotoProfil,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

@@ -165,157 +165,158 @@ class _DaftarMCUScreenState extends State<DaftarMCUScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.topCenter,
-      child: SingleChildScrollView(
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      body: SingleChildScrollView(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: double.infinity,
-              color: Colors.blue,
-              padding: const EdgeInsets.all(16.0),
-              alignment: Alignment.center,
-              child: const Text(
-                'Daftar Medical Checkup',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF1A237E), Color(0xFF5B86E5), Color(0xFF36D1C4)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
                 ),
               ),
-            ),
-            Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 800),
-                padding: const EdgeInsets.all(16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Consumer<PaketMCUProvider>(
-                        builder: (context, provider, child) {
-                          if (provider.isLoading) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          }
-
-                          if (provider.error != null) {
-                            return Center(
-                              child: Text('Error: ${provider.error}'),
-                            );
-                          }
-
-                          return DropdownButtonFormField<PaketMCU>(
-                            value: _selectedPaket,
-                            decoration: const InputDecoration(
-                              labelText: 'Pilih Paket MCU',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: provider.paketList.map((paket) {
-                              return DropdownMenuItem(
-                                value: paket,
-                                child: Text(paket.namaPaket),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedPaket = value;
-                              });
-                            },
-                            validator: (value) {
-                              if (value == null) {
-                                return 'Silakan pilih paket MCU';
-                              }
-                              return null;
-                            },
-                          );
-                        },
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Icon(Icons.medical_services, color: Colors.white, size: 32),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Daftar Medical Checkup',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 16),
-                      if (_selectedPaket != null) ...[
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _selectedPaket!.namaPaket,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(_selectedPaket!.deskripsi),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Harga: Rp ${_selectedPaket!.harga.toStringAsFixed(0)}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      Card(
-                        child: Column(
-                          children: [
-                            ListTile(
-                              title: const Text('Tanggal Pemeriksaan'),
-                              subtitle: Text(
-                                '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.calendar_today),
-                                onPressed: () => _selectDate(context),
-                              ),
-                            ),
-                            const Divider(),
-                            ListTile(
-                              title: const Text('Jam Pemeriksaan'),
-                              subtitle: Text(
-                                '${_selectedTime.hour}:${_selectedTime.minute.toString().padLeft(2, '0')}',
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.access_time),
-                                onPressed: () => _selectTime(context),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: Colors.blue,
-                          ),
-                          onPressed: _isLoading ? null : _submitForm,
-                          child: _isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white)
-                              : const Text(
-                                  'Daftar',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
+                      maxLines: 1,
+                    ),
                   ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Consumer<PaketMCUProvider>(
+                      builder: (context, provider, child) {
+                        if (provider.isLoading) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (provider.error != null) {
+                          return Center(child: Text('Error: ${provider.error}'));
+                        }
+                        return DropdownButtonFormField<PaketMCU>(
+                          value: _selectedPaket,
+                          decoration: InputDecoration(
+                            labelText: 'Pilih Paket MCU',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          items: provider.paketList.map((paket) {
+                            return DropdownMenuItem(
+                              value: paket,
+                              child: Text(paket.namaPaket, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() { _selectedPaket = value; });
+                          },
+                          validator: (value) {
+                            if (value == null) return 'Silakan pilih paket MCU';
+                            return null;
+                          },
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    if (_selectedPaket != null) ...[
+                      Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        elevation: 4,
+                        color: Colors.white,
+                        child: Padding(
+                          padding: const EdgeInsets.all(18.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(_selectedPaket!.namaPaket, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              Text(_selectedPaket!.deskripsi, style: const TextStyle(fontSize: 15)),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(Icons.attach_money, color: Colors.green, size: 20),
+                                  const SizedBox(width: 4),
+                                  Text('Rp ${_selectedPaket!.harga.toStringAsFixed(0)}',
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                    Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      elevation: 2,
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.calendar_today, color: Color(0xFF1A237E)),
+                            title: const Text('Tanggal Pemeriksaan'),
+                            subtitle: Text('${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.edit_calendar),
+                              onPressed: () => _selectDate(context),
+                            ),
+                          ),
+                          const Divider(),
+                          ListTile(
+                            leading: const Icon(Icons.access_time, color: Color(0xFF1A237E)),
+                            title: const Text('Jam Pemeriksaan'),
+                            subtitle: Text('${_selectedTime.hour}:${_selectedTime.minute.toString().padLeft(2, '0')}'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _selectTime(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          backgroundColor: const Color(0xFF1A237E),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                          elevation: 4,
+                        ),
+                        onPressed: _isLoading ? null : _submitForm,
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text('Daftar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

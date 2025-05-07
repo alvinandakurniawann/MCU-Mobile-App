@@ -49,23 +49,6 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard Pengguna'),
-        backgroundColor: Colors.blue,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthProvider>().logout();
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/',
-                (route) => false,
-              );
-            },
-          ),
-        ],
-      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWebLayout = constraints.maxWidth > 600;
@@ -81,24 +64,29 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                       _selectedIndex = index;
                     });
                   },
+                  backgroundColor: const Color(0xFF1A237E),
+                  selectedIconTheme: const IconThemeData(color: Colors.white),
+                  selectedLabelTextStyle: const TextStyle(color: Colors.white),
+                  unselectedIconTheme: IconThemeData(color: Colors.white.withOpacity(0.7)),
+                  unselectedLabelTextStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
                   destinations: const [
                     NavigationRailDestination(
-                      icon: Icon(Icons.home),
+                      icon: Icon(Icons.home_outlined),
                       selectedIcon: Icon(Icons.home),
                       label: Text('Beranda'),
                     ),
                     NavigationRailDestination(
-                      icon: Icon(Icons.medical_services),
+                      icon: Icon(Icons.medical_services_outlined),
                       selectedIcon: Icon(Icons.medical_services),
                       label: Text('Daftar MCU'),
                     ),
                     NavigationRailDestination(
-                      icon: Icon(Icons.history),
+                      icon: Icon(Icons.history_outlined),
                       selectedIcon: Icon(Icons.history),
                       label: Text('Riwayat MCU'),
                     ),
                     NavigationRailDestination(
-                      icon: Icon(Icons.person),
+                      icon: Icon(Icons.person_outline),
                       selectedIcon: Icon(Icons.person),
                       label: Text('Profil'),
                     ),
@@ -117,32 +105,52 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
               Expanded(
                 child: _buildSelectedScreen(),
               ),
-              BottomNavigationBar(
-                currentIndex: _selectedIndex,
-                onTap: (index) {
-                  setState(() {
-                    _selectedIndex = index;
-                  });
-                },
-                type: BottomNavigationBarType.fixed,
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home),
-                    label: 'Beranda',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.medical_services),
-                    label: 'Daftar MCU',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.history),
-                    label: 'Riwayat MCU',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person),
-                    label: 'Profil',
-                  ),
-                ],
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: BottomNavigationBar(
+                  currentIndex: _selectedIndex,
+                  onTap: (index) {
+                    setState(() {
+                      _selectedIndex = index;
+                    });
+                  },
+                  type: BottomNavigationBarType.fixed,
+                  backgroundColor: Colors.white,
+                  selectedItemColor: const Color(0xFF1A237E),
+                  unselectedItemColor: Colors.grey,
+                  selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home_outlined),
+                      activeIcon: Icon(Icons.home),
+                      label: 'Beranda',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.medical_services_outlined),
+                      activeIcon: Icon(Icons.medical_services),
+                      label: 'Daftar MCU',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.history_outlined),
+                      activeIcon: Icon(Icons.history),
+                      label: 'Riwayat MCU',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.person_outline),
+                      activeIcon: Icon(Icons.person),
+                      label: 'Profil',
+                    ),
+                  ],
+                ),
               ),
             ],
           );
@@ -171,7 +179,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   Widget _buildDashboardContent() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(),
+        child: CircularProgressIndicator(
+          color: Color(0xFF1A237E),
+        ),
       );
     }
 
@@ -179,7 +189,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
       builder: (context, userProvider, pendaftaranProvider, child) {
         if (pendaftaranProvider.isLoading) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(
+              color: Color(0xFF1A237E),
+            ),
           );
         }
 
@@ -190,13 +202,11 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
           );
         }
 
-        // Filter pendaftaran untuk user yang sedang login dan belum selesai
         final userPendaftaran = pendaftaranProvider.pendaftaranList
             .where((p) =>
                 p.user.id == user.id && p.status.toLowerCase() != 'completed')
             .toList();
 
-        // Urutkan berdasarkan tanggal terdekat
         userPendaftaran.sort(
             (a, b) => a.tanggalPendaftaran.compareTo(b.tanggalPendaftaran));
 
@@ -210,14 +220,108 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Selamat Datang, ${user.namaLengkap}!',
-                    style: TextStyle(
-                      fontSize: isWebLayout ? 28 : 24,
-                      fontWeight: FontWeight.bold,
+                  // Header Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF1A237E), Color(0xFF5B86E5), Color(0xFF36D1C4)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Hello, User',
+                                  style: TextStyle(
+                                    fontSize: isWebLayout ? 24 : 20,
+                                    color: Colors.white.withOpacity(0.8),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  user.namaLengkap,
+                                  style: TextStyle(
+                                    fontSize: isWebLayout ? 28 : 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            CircleAvatar(
+                              radius: 22,
+                              backgroundColor: Colors.white.withOpacity(0.15),
+                              backgroundImage: (user.fotoProfil != null && user.fotoProfil!.isNotEmpty)
+                                  ? NetworkImage(user.fotoProfil!)
+                                  : null,
+                              child: (user.fotoProfil == null || user.fotoProfil!.isEmpty)
+                                  ? const Icon(Icons.person, color: Colors.white, size: 24)
+                                  : null,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.medical_services, color: Colors.white, size: 32),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Jadwal MCU Mendatang',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      userPendaftaran.isEmpty
+                                          ? 'Belum ada jadwal MCU'
+                                          : '${userPendaftaran.length} jadwal MCU',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.8),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 24),
+
+                  // Carousel Section
                   SizedBox(
                     height: isWebLayout ? 200 : 175,
                     child: Stack(
@@ -253,7 +357,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: _carouselIndex == index
-                                      ? Colors.redAccent
+                                      ? const Color(0xFF1A237E)
                                       : Colors.grey[300],
                                 ),
                               );
@@ -263,344 +367,99 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 24),
+
+                  // Menu Section
+                  Text(
+                    'Layanan MCU',
+                    style: TextStyle(
+                      fontSize: isWebLayout ? 24 : 20,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1A237E),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   SizedBox(
-                    height: 90,
+                    height: 100,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
+                      clipBehavior: Clip.hardEdge,
                       children: [
                         _MenuCard(
                           iconPath: 'assets/icons/darah.png',
                           label: 'Hematologi',
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                title: Row(
-                                  children: [
-                                    Image.asset(
-                                      'assets/icons/darah.png',
-                                      width: 32,
-                                      height: 32,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'Detail Pemeriksaan Hematologi',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                content: SingleChildScrollView(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        'Komponen Pemeriksaan:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.blue,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Wrap(
-                                        spacing: 8,
-                                        children: [
-                                          _buildChip('Hemoglobin'),
-                                          _buildChip('Lekosit'),
-                                          _buildChip('Trombosit'),
-                                          _buildChip('Hematokrit'),
-                                          _buildChip('Hitung Jenis'),
-                                          _buildChip('LED'),
-                                          _buildChip('Eritosit'),
-                                          _buildChip('MC'),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      const Text(
-                                        'Deskripsi:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.blue,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      const Text(
-                                        'Pemeriksaan Hematologi merupakan pemeriksaan dasar yang digunakan secara luas mulai sebagai pemeriksaan penyaring, diagnosis maupun untuk mengikuti perkembangan penyakit; diantaranya penyakit infeksi, kelainan darah, penyakit degeneratif, dan lainnya.',
-                                      ),
-                                      const SizedBox(height: 16),
-                                      _buildInfoSection(
-                                        'Spesimen Pemeriksaan',
-                                        'Darah dengan antikoagulan EDTA',
-                                        Icons.bloodtype,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _buildInfoSection(
-                                        'Persiapan Pemeriksaan',
-                                        'Tidak ada persiapan khusus',
-                                        Icons.info_outline,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(),
-                                    child: const Text(
-                                      'Tutup',
-                                      style: TextStyle(
-                                        color: Colors.blue,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                          onTap: () => _showServiceDetails(
+                            context,
+                            'Hematologi',
+                            'assets/icons/darah.png',
+                            [
+                              'Hemoglobin',
+                              'Lekosit',
+                              'Trombosit',
+                              'Hematokrit',
+                              'Hitung Jenis',
+                              'LED',
+                              'Eritosit',
+                              'MC',
+                            ],
+                            deskripsi: 'Merupakan panel pemeriksaan yg terdiri dari Hemoglobin, Lekosit, Trombosit, Hematokrit, Hitung Jenis, LED, Eritosit, dan nilai-nilai MC. Pemeriksaan Hematologi merupakan pemeriksaan dasar yang digunakan secara luas mulai sebagai pemeriksaan penyaring, diagnosis maupun untuk mengikuti perkembangan penyakit; diantaranya penyakit infeksi, kelainan darah, penyakit degeneratif, dan lainnya. Spesimen Pemeriksaan: Darah dengan antikoagulan EDTA. Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
+                          ),
                         ),
                         _MenuCard(
                           iconPath: 'assets/icons/jantung.png',
                           label: 'Jantung',
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                title: Row(
-                                  children: [
-                                    Image.asset(
-                                      'assets/icons/jantung.png',
-                                      width: 32,
-                                      height: 32,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'Detail Pemeriksaan Jantung',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                content: SingleChildScrollView(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        'Deskripsi:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.blue,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      const Text(
-                                        'Troponin T adalah protein spesfik yang hanya ada di otot jantung. Pemeriksaan Troponin T digunakan untuk evaluasi dugaan adanya kelainan iskemi koroner akut, misalnya pada kasus nyeri dada. Dibanding dengan cardiac marker lainnya (misalnya CK-MB), pemeriksaan troponin lebih spesifik dan sensitif dalam medeteksi adanya kerusakan otot jantung.',
-                                      ),
-                                      const SizedBox(height: 16),
-                                      _buildInfoSection(
-                                        'Spesimen Pemeriksaan',
-                                        'Darah',
-                                        Icons.bloodtype,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _buildInfoSection(
-                                        'Persiapan Pemeriksaan',
-                                        'Tidak ada persiapan khusus',
-                                        Icons.info_outline,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(),
-                                    child: const Text(
-                                      'Tutup',
-                                      style: TextStyle(
-                                        color: Colors.blue,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                          onTap: () => _showServiceDetails(
+                            context,
+                            'Jantung',
+                            'assets/icons/jantung.png',
+                            [
+                              'EKG',
+                              'Treadmill',
+                              'Ekokardiografi',
+                            ],
+                            deskripsi: 'Troponin T adalah protein spesifik yang hanya ada di otot jantung. Pemeriksaan Troponin T digunakan untuk evaluasi dugaan adanya kelainan iskemi koroner akut, misalnya pada kasus nyeri dada. Dibanding dengan cardiac marker lainnya (misalnya CK-MB), pemeriksaan troponin lebih spesifik dan sensitif dalam mendeteksi adanya kerusakan otot jantung. Spesimen Pemeriksaan: Darah. Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
+                          ),
                         ),
                         _MenuCard(
                           iconPath: 'assets/icons/paruparu.png',
                           label: 'Paru-paru',
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                title: Row(
-                                  children: [
-                                    Image.asset(
-                                      'assets/icons/paruparu.png',
-                                      width: 32,
-                                      height: 32,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'Detail Pemeriksaan Paru-paru',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                content: SingleChildScrollView(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        'Deskripsi:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.blue,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      const Text(
-                                        'Interferon-Gamma Release Assays (IGRA) adalah pemeriksaan darah yang digunakan untuk membantu dalam diagnosis penyakit Tuberkulosis (TB) maupun Infeksi Laten Tuberkulosis (LTBI). Pemeriksaan ini mengukur respon imun seluler terhadap M. Tuberculosis (M. TBC). Hasil Test IGRA yang positip mengindikasikan adanya infeksi oleh kuman TBC.',
-                                      ),
-                                      const SizedBox(height: 16),
-                                      _buildInfoSection(
-                                        'Spesimen Pemeriksaan',
-                                        'Darah (plasma)',
-                                        Icons.bloodtype,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _buildInfoSection(
-                                        'Persiapan Pemeriksaan',
-                                        'Tidak ada persiapan khusus',
-                                        Icons.info_outline,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(),
-                                    child: const Text(
-                                      'Tutup',
-                                      style: TextStyle(
-                                        color: Colors.blue,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                          onTap: () => _showServiceDetails(
+                            context,
+                            'Paru-paru',
+                            'assets/icons/paruparu.png',
+                            [
+                              'Spirometri',
+                              'Rontgen Thorax',
+                            ],
+                            deskripsi: 'Interferon-Gamma Release Assays (IGRA) adalah pemeriksaan darah yang digunakan untuk membantu dalam diagnosis penyakit Tuberkulosis (TB) maupun Infeksi Laten Tuberkulosis (LTBI). Pemeriksaan ini mengukur respon imun seluler terhadap M. Tuberculosis (M. TBC). Hasil Test IGRA yang positif mengindikasikan adanya infeksi oleh kuman TBC. Spesimen Pemeriksaan: Darah (plasma). Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
+                          ),
                         ),
                         _MenuCard(
                           iconPath: 'assets/icons/usus.png',
-                          label: 'Usus',
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                title: Row(
-                                  children: [
-                                    Image.asset(
-                                      'assets/icons/usus.png',
-                                      width: 32,
-                                      height: 32,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'Detail Pemeriksaan Usus',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                content: SingleChildScrollView(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        'Deskripsi:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.blue,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      const Text(
-                                        'Fecal Calprotectin adalah protein dalam faeces yang dikeluarkan ketika terjadi proses peradangan di usus. Pemeriksaan Fecal Calprotectin pada umumnya digunakan untuk membantu diagnosa dan monitoring penyakit inflammatory bowel disease (IBD), disamping menilai diare kronik karena inflamasi. Kadar Calprotectin meningkat didapatkan pada penyakit IBD, seperti Crohn\'s Disease atau ulcerative colitis.',
-                                      ),
-                                      const SizedBox(height: 16),
-                                      _buildInfoSection(
-                                        'Spesimen Pemeriksaan',
-                                        'Faeses',
-                                        Icons.science,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _buildInfoSection(
-                                        'Persiapan Pemeriksaan',
-                                        'Tidak ada persiapan khusus',
-                                        Icons.info_outline,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(),
-                                    child: const Text(
-                                      'Tutup',
-                                      style: TextStyle(
-                                        color: Colors.blue,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                          label: 'Faeces',
+                          onTap: () => _showServiceDetails(
+                            context,
+                            'Faeces',
+                            'assets/icons/usus.png',
+                            [
+                              'USG Abdomen',
+                              'Kolonoskopi',
+                            ],
+                            deskripsi: 'Fecal Calprotectin adalah protein dalam faeces yang dikeluarkan ketika terjadi proses peradangan di usus. Pemeriksaan Fecal Calprotectin pada umumnya digunakan untuk membantu diagnosa dan monitoring penyakit inflammatory bowel disease (IBD), disamping menilai diare kronik karena inflamasi. Kadar Calprotectin meningkat didapatkan pada penyakit IBD, seperti Crohn\'s Disease atau ulcerative colitis. Spesimen Pemeriksaan: Faeses. Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
+                          ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // Upcoming MCU Section
                   Text(
                     'Jadwal MCU Mendatang',
                     style: TextStyle(
                       fontSize: isWebLayout ? 24 : 20,
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1A237E),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -614,19 +473,122 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     );
   }
 
-  Widget _buildUpcomingMCUList(List<dynamic> userPendaftaran) {
-    if (userPendaftaran.isEmpty) {
-      return const Center(
-        child: Card(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              'Tidak ada jadwal MCU mendatang',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+  void _showServiceDetails(BuildContext context, String title, String iconPath, List<String> services, {String? deskripsi}) {
+    // Pisahkan deskripsi utama, spesimen, dan persiapan
+    String mainDesc = deskripsi ?? '-';
+    String spesimen = '';
+    String persiapan = '';
+    if (deskripsi != null) {
+      final spesimenMatch = RegExp(r'Spesimen Pemeriksaan *: *([^\.]+)').firstMatch(deskripsi);
+      final persiapanMatch = RegExp(r'Persiapan Pemeriksaan *: *([^\.]+)').firstMatch(deskripsi);
+      if (spesimenMatch != null) {
+        spesimen = spesimenMatch.group(1)?.trim() ?? '';
+        mainDesc = mainDesc.replaceAll(spesimenMatch.group(0)!, '').trim();
+      }
+      if (persiapanMatch != null) {
+        persiapan = persiapanMatch.group(1)?.trim() ?? '';
+        mainDesc = mainDesc.replaceAll(persiapanMatch.group(0)!, '').trim();
+      }
+    }
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Image.asset(
+              iconPath,
+              width: 32,
+              height: 32,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Detail Pemeriksaan $title',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A237E),
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.7,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Deskripsi:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Color(0xFF1A237E),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  mainDesc,
+                  style: const TextStyle(fontSize: 15),
+                ),
+                if (spesimen.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _buildInfoSection(
+                    'Spesimen Pemeriksaan',
+                    spesimen,
+                    Icons.bloodtype,
+                  ),
+                ],
+                if (persiapan.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _buildInfoSection(
+                    'Persiapan Pemeriksaan',
+                    persiapan,
+                    Icons.info_outline,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Tutup',
+              style: TextStyle(
+                color: Color(0xFF1A237E),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingMCUList(List<dynamic> pendaftaranList) {
+    if (pendaftaranList.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        child: const Center(
+          child: Text(
+            'Belum ada jadwal MCU mendatang',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
             ),
           ),
         ),
@@ -636,16 +598,48 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: userPendaftaran.length,
+      itemCount: pendaftaranList.length,
       itemBuilder: (context, index) {
-        final pendaftaran = userPendaftaran[index];
+        final pendaftaran = pendaftaranList[index];
         return Card(
-          margin: const EdgeInsets.only(bottom: 8),
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
           child: ListTile(
-            leading: const Icon(Icons.event, color: Colors.blue),
-            title: Text(pendaftaran.paketMcu.namaPaket),
-            subtitle: Text(
-              'Tanggal: ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
+            contentPadding: const EdgeInsets.all(16),
+            leading: CircleAvatar(
+              backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
+              child: Icon(
+                _getStatusIcon(pendaftaran.status),
+                color: _getStatusColor(pendaftaran.status),
+              ),
+            ),
+            title: Text(
+              pendaftaran.paketMcu.namaPaket,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                Text(
+                  'Tanggal: ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Harga: Rp ${pendaftaran.paketMcu.harga.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
             trailing: _buildStatusChip(pendaftaran.status),
           ),
@@ -654,35 +648,40 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     );
   }
 
-  Widget _buildStatusChip(String status) {
-    Color color;
-    IconData icon;
-
+  Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        color = Colors.orange;
-        icon = Icons.pending;
-        break;
+        return Colors.orange;
       case 'confirmed':
-        color = Colors.blue;
-        icon = Icons.check_circle;
-        break;
+        return Colors.blue;
       case 'completed':
-        color = Colors.green;
-        icon = Icons.done_all;
-        break;
+        return Colors.green;
       case 'cancelled':
-        color = Colors.red;
-        icon = Icons.cancel;
-        break;
+        return Colors.red;
       default:
-        color = Colors.grey;
-        icon = Icons.help;
+        return Colors.grey;
     }
+  }
 
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Icons.pending;
+      case 'confirmed':
+        return Icons.check_circle;
+      case 'completed':
+        return Icons.done_all;
+      case 'cancelled':
+        return Icons.cancel;
+      default:
+        return Icons.help;
+    }
+  }
+
+  Widget _buildStatusChip(String status) {
     return Chip(
       avatar: Icon(
-        icon,
+        _getStatusIcon(status),
         color: Colors.white,
         size: 16,
       ),
@@ -693,7 +692,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
           fontSize: 12,
         ),
       ),
-      backgroundColor: color,
+      backgroundColor: _getStatusColor(status),
     );
   }
 
@@ -706,7 +705,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
           fontSize: 12,
         ),
       ),
-      backgroundColor: Colors.blue,
+      backgroundColor: const Color(0xFF1A237E),
       padding: const EdgeInsets.symmetric(horizontal: 8),
     );
   }
@@ -715,12 +714,12 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
+        color: const Color(0xFF1A237E).withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.blue, size: 24),
+          Icon(icon, color: const Color(0xFF1A237E), size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -730,7 +729,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                   title,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue,
+                    color: Color(0xFF1A237E),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -748,39 +747,68 @@ class _MenuCard extends StatelessWidget {
   final String iconPath;
   final String label;
   final VoidCallback? onTap;
-  const _MenuCard({required this.iconPath, required this.label, this.onTap, Key? key}) : super(key: key);
+  final String? deskripsi;
+
+  const _MenuCard({
+    required this.iconPath,
+    required this.label,
+    this.onTap,
+    this.deskripsi,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 2,
-          child: SizedBox(
-            width: 140,
-            height: 80,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          elevation: 3,
+          child: Container(
+            width: 180,
+            height: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1A237E), Color(0xFF5B86E5), Color(0xFF36D1C4)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+            ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
-                  margin: const EdgeInsets.only(right: 12),
+                  width: 36,
+                  height: 36,
+                  margin: const EdgeInsets.only(right: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: Image.asset(
                     iconPath,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported, size: 32, color: Colors.grey),
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.image_not_supported,
+                      size: 28,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   child: Text(
                     label,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                     textAlign: TextAlign.left,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
