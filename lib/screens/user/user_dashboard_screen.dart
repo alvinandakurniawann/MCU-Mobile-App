@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/pendaftaran_provider.dart';
@@ -248,7 +249,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Hello, User',
+                                  'Hello,',
                                   style: TextStyle(
                                     fontSize: isWebLayout ? 24 : 20,
                                     color: Colors.white.withOpacity(0.8),
@@ -381,11 +382,13 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 100,
-                    child: ListView(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.only(bottom: 80),
                       scrollDirection: Axis.horizontal,
                       clipBehavior: Clip.hardEdge,
-                      children: [
-                        _MenuCard(
+                      itemCount: 4,
+                      itemBuilder: (context, index) {
+                        return _MenuCard(
                           iconPath: 'assets/icons/darah.png',
                           label: 'Hematologi',
                           onTap: () => _showServiceDetails(
@@ -404,51 +407,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                             ],
                             deskripsi: 'Merupakan panel pemeriksaan yg terdiri dari Hemoglobin, Lekosit, Trombosit, Hematokrit, Hitung Jenis, LED, Eritosit, dan nilai-nilai MC. Pemeriksaan Hematologi merupakan pemeriksaan dasar yang digunakan secara luas mulai sebagai pemeriksaan penyaring, diagnosis maupun untuk mengikuti perkembangan penyakit; diantaranya penyakit infeksi, kelainan darah, penyakit degeneratif, dan lainnya. Spesimen Pemeriksaan: Darah dengan antikoagulan EDTA. Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
                           ),
-                        ),
-                        _MenuCard(
-                          iconPath: 'assets/icons/jantung.png',
-                          label: 'Jantung',
-                          onTap: () => _showServiceDetails(
-                            context,
-                            'Jantung',
-                            'assets/icons/jantung.png',
-                            [
-                              'EKG',
-                              'Treadmill',
-                              'Ekokardiografi',
-                            ],
-                            deskripsi: 'Troponin T adalah protein spesifik yang hanya ada di otot jantung. Pemeriksaan Troponin T digunakan untuk evaluasi dugaan adanya kelainan iskemi koroner akut, misalnya pada kasus nyeri dada. Dibanding dengan cardiac marker lainnya (misalnya CK-MB), pemeriksaan troponin lebih spesifik dan sensitif dalam mendeteksi adanya kerusakan otot jantung. Spesimen Pemeriksaan: Darah. Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
-                          ),
-                        ),
-                        _MenuCard(
-                          iconPath: 'assets/icons/paruparu.png',
-                          label: 'Paru-paru',
-                          onTap: () => _showServiceDetails(
-                            context,
-                            'Paru-paru',
-                            'assets/icons/paruparu.png',
-                            [
-                              'Spirometri',
-                              'Rontgen Thorax',
-                            ],
-                            deskripsi: 'Interferon-Gamma Release Assays (IGRA) adalah pemeriksaan darah yang digunakan untuk membantu dalam diagnosis penyakit Tuberkulosis (TB) maupun Infeksi Laten Tuberkulosis (LTBI). Pemeriksaan ini mengukur respon imun seluler terhadap M. Tuberculosis (M. TBC). Hasil Test IGRA yang positif mengindikasikan adanya infeksi oleh kuman TBC. Spesimen Pemeriksaan: Darah (plasma). Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
-                          ),
-                        ),
-                        _MenuCard(
-                          iconPath: 'assets/icons/usus.png',
-                          label: 'Faeces',
-                          onTap: () => _showServiceDetails(
-                            context,
-                            'Faeces',
-                            'assets/icons/usus.png',
-                            [
-                              'USG Abdomen',
-                              'Kolonoskopi',
-                            ],
-                            deskripsi: 'Fecal Calprotectin adalah protein dalam faeces yang dikeluarkan ketika terjadi proses peradangan di usus. Pemeriksaan Fecal Calprotectin pada umumnya digunakan untuk membantu diagnosa dan monitoring penyakit inflammatory bowel disease (IBD), disamping menilai diare kronik karena inflamasi. Kadar Calprotectin meningkat didapatkan pada penyakit IBD, seperti Crohn\'s Disease atau ulcerative colitis. Spesimen Pemeriksaan: Faeses. Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
-                          ),
-                        ),
-                      ],
+                        );
+                      },
+                      separatorBuilder: (context, index) => const SizedBox(width: 16),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -595,7 +556,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
       );
     }
 
-    return ListView.builder(
+    return ListView.separated(
+      padding: const EdgeInsets.only(bottom: 80),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: pendaftaranList.length,
@@ -633,7 +595,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Harga: Rp ${pendaftaran.paketMcu.harga.toStringAsFixed(0)}',
+                  'Harga: Rp ${NumberFormat('#,##0.00', 'id_ID').format(pendaftaran.paketMcu.harga)}',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -645,6 +607,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
           ),
         );
       },
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
     );
   }
 

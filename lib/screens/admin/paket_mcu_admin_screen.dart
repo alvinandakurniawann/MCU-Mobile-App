@@ -37,64 +37,54 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
     super.dispose();
   }
 
-  Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate()) return;
-
+  void _editPaket(PaketMCU paket) {
     setState(() {
-      _isLoading = true;
+      _selectedPaket = paket;
+      _namaPaketController.text = paket.namaPaket;
+      _deskripsiController.text = paket.deskripsi;
+      _hargaController.text = NumberFormat.currency(
+        locale: 'id_ID',
+        symbol: '',
+        decimalDigits: 0,
+      ).format(paket.harga);
     });
+  }
 
-    try {
+  String _formatCurrency(String value) {
+    if (value.isEmpty) return '';
+    // Hapus semua karakter non-angka
+    final numericValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+    if (numericValue.isEmpty) return '';
+    // Format angka dengan titik sebagai pemisah ribuan
+    return NumberFormat('#,###', 'id_ID').format(int.parse(numericValue)).replaceAll(',', '.');
+  }
+
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      // Hapus titik sebelum parsing ke double
+      final hargaString = _hargaController.text.replaceAll('.', '');
       final paketData = {
         'nama_paket': _namaPaketController.text,
+        'harga': double.parse(hargaString),
         'deskripsi': _deskripsiController.text,
-        'harga': double.parse(
-            _hargaController.text.replaceAll(RegExp(r'[^0-9]'), '')),
       };
-
       bool success;
       if (_selectedPaket == null) {
-        success =
-            await context.read<PaketMCUProvider>().createPaketMCU(paketData);
+        success = await context.read<PaketMCUProvider>().createPaket(paketData);
       } else {
-        success = await context
-            .read<PaketMCUProvider>()
-            .updatePaketMCU(_selectedPaket!.id, paketData);
+        success = await context.read<PaketMCUProvider>()
+            .updatePaket(_selectedPaket!.id, paketData);
       }
-
-      if (!mounted) return;
-
-      if (success) {
-        _resetForm();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Data paket MCU berhasil disimpan'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
+      if (success && mounted) {
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              context.read<PaketMCUProvider>().error ?? 'Gagal menyimpan data',
+              _selectedPaket == null ? 'Paket berhasil ditambahkan' : 'Paket berhasil diperbarui',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.green,
           ),
         );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -105,15 +95,6 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
       _namaPaketController.clear();
       _deskripsiController.clear();
       _hargaController.clear();
-    });
-  }
-
-  void _editPaket(PaketMCU paket) {
-    setState(() {
-      _selectedPaket = paket;
-      _namaPaketController.text = paket.namaPaket;
-      _deskripsiController.text = paket.deskripsi;
-      _hargaController.text = paket.harga.toString();
     });
   }
 
@@ -204,33 +185,28 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
                     ),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
-                      if (value.isNotEmpty) {
-                        // Hapus semua karakter non-angka
-                        final numericValue =
-                            value.replaceAll(RegExp(r'[^0-9]'), '');
-                        if (numericValue.isNotEmpty) {
-                          // Format angka dengan pemisah ribuan
-                          final formattedValue = NumberFormat.currency(
-                            locale: 'id_ID',
-                            symbol: '',
-                            decimalDigits: 0,
-                          ).format(int.parse(numericValue));
-
-                          // Update controller dengan nilai yang sudah diformat
-                          _hargaController.value = TextEditingValue(
-                            text: formattedValue,
-                            selection: TextSelection.collapsed(
-                                offset: formattedValue.length),
-                          );
-                        }
+                      String numericValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+                      if (numericValue.isEmpty) {
+                        _hargaController.text = '';
+                        return;
+                      }
+                      String formatted = NumberFormat('#,###', 'id_ID').format(int.parse(numericValue)).replaceAll(',', '.');
+                      if (formatted != value) {
+                        final newSelection = TextSelection.collapsed(offset: formatted.length);
+                        _hargaController.value = TextEditingValue(
+                          text: formatted,
+                          selection: newSelection,
+                        );
                       }
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Harga tidak boleh kosong';
                       }
-                      final numericValue =
-                          value.replaceAll(RegExp(r'[^0-9]'), '');
+                      final numericValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+                      if (numericValue.isEmpty) {
+                        return 'Harga harus berupa angka';
+                      }
                       if (int.tryParse(numericValue) == null) {
                         return 'Harga harus berupa angka';
                       }

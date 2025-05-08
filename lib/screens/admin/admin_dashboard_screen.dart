@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/pendaftaran_provider.dart';
 import '../../providers/paket_mcu_provider.dart';
@@ -46,29 +47,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Admin Dashboard',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.blue,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthProvider>().logout();
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/',
-                (route) => false,
-              );
-            },
-          ),
-        ],
-      ),
+      backgroundColor: Colors.grey[100],
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWebLayout = constraints.maxWidth > 600;
@@ -76,45 +55,77 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           if (isWebLayout) {
             return Row(
               children: [
-                NavigationRail(
-                  extended: constraints.maxWidth > 800,
-                  selectedIndex: _selectedIndex,
-                  onDestinationSelected: (int index) {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                  },
-                  backgroundColor: Colors.white,
-                  elevation: 2,
-                  destinations: const [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.dashboard),
-                      selectedIcon: Icon(Icons.dashboard),
-                      label: Text('Dashboard'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.medical_services),
-                      selectedIcon: Icon(Icons.medical_services),
-                      label: Text('Paket MCU'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.people),
-                      selectedIcon: Icon(Icons.people),
-                      label: Text('Pasien'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.schedule),
-                      selectedIcon: Icon(Icons.schedule),
-                      label: Text('Jadwal'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.bar_chart),
-                      selectedIcon: Icon(Icons.bar_chart),
-                      label: Text('Laporan'),
-                    ),
-                  ],
+                Container(
+                  width: 280,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 0),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF1A237E), Color(0xFF5B86E5)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            const CircleAvatar(
+                              radius: 40,
+                              backgroundColor: Colors.white,
+                              child: Icon(Icons.admin_panel_settings, size: 40, color: Color(0xFF1A237E)),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Admin Panel',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildNavItem(Icons.dashboard, 'Dashboard', 0),
+                      _buildNavItem(Icons.medical_services, 'Paket MCU', 1),
+                      _buildNavItem(Icons.people, 'Pasien', 2),
+                      _buildNavItem(Icons.schedule, 'Jadwal', 3),
+                      _buildNavItem(Icons.bar_chart, 'Laporan', 4),
+                      const Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            context.read<AuthProvider>().logout();
+                            Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                          },
+                          icon: const Icon(Icons.logout),
+                          label: const Text('Logout'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 45),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const VerticalDivider(thickness: 1, width: 1),
                 Expanded(
                   child: _buildSelectedScreen(),
                 ),
@@ -124,6 +135,47 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
           return Column(
             children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1A237E), Color(0xFF5B86E5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 24,
+                          backgroundColor: Colors.white,
+                          child: Icon(Icons.admin_panel_settings, size: 24, color: Color(0xFF1A237E)),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Admin Panel',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.logout, color: Colors.white),
+                          onPressed: () {
+                            context.read<AuthProvider>().logout();
+                            Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
               Expanded(
                 child: _buildSelectedScreen(),
               ),
@@ -147,7 +199,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   },
                   type: BottomNavigationBarType.fixed,
                   backgroundColor: Colors.white,
-                  selectedItemColor: Colors.blue,
+                  selectedItemColor: const Color(0xFF1A237E),
                   unselectedItemColor: Colors.grey,
                   items: const [
                     BottomNavigationBarItem(
@@ -176,6 +228,45 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final isSelected = _selectedIndex == index;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF1A237E).withOpacity(0.1) : Colors.transparent,
+          border: Border(
+            left: BorderSide(
+              color: isSelected ? const Color(0xFF1A237E) : Colors.transparent,
+              width: 4,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? const Color(0xFF1A237E) : Colors.grey,
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? const Color(0xFF1A237E) : Colors.grey,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -240,6 +331,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     style: TextStyle(
                       fontSize: isWebLayout ? 28 : 24,
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1A237E),
                     ),
                   ),
                   SizedBox(height: isWebLayout ? 24 : 16),
@@ -255,7 +347,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         'Total Pendaftaran',
                         totalPendaftaran.toString(),
                         Icons.assignment,
-                        Colors.blue,
+                        const Color(0xFF1A237E),
                       ),
                       _buildStatCard(
                         'Menunggu',
@@ -283,6 +375,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     style: TextStyle(
                       fontSize: isWebLayout ? 24 : 20,
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1A237E),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -302,35 +395,48 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: color,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [
+              color.withOpacity(0.1),
+              color.withOpacity(0.05),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 32,
                 color: color,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: color.withOpacity(0.8),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -338,8 +444,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildRecentRegistrations(List<dynamic> pendaftaranList) {
     if (pendaftaranList.isEmpty) {
-      return const Card(
-        child: Padding(
+      return Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Padding(
           padding: EdgeInsets.all(16.0),
           child: Text(
             'Belum ada pendaftaran',
@@ -353,10 +463,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       );
     }
 
-    // Sort by date, most recent first
     pendaftaranList.sort((a, b) => b.tanggalPendaftaran.compareTo(a.tanggalPendaftaran));
-
-    // Take only the 5 most recent
     final recentPendaftaran = pendaftaranList.take(5).toList();
 
     return Card(
@@ -368,12 +475,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: recentPendaftaran.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+        separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[200]),
         itemBuilder: (context, index) {
           final pendaftaran = recentPendaftaran[index];
           return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _getStatusColor(pendaftaran.status).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Icon(
                 _getStatusIcon(pendaftaran.status),
                 color: _getStatusColor(pendaftaran.status),
@@ -386,17 +498,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             subtitle: Text(
-              '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
+              '${pendaftaran.paketMcu.namaPaket} - ${DateFormat('dd MMM yyyy').format(pendaftaran.tanggalPendaftaran)}',
             ),
-            trailing: Chip(
-              label: Text(
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _getStatusColor(pendaftaran.status).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
                 pendaftaran.status,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: _getStatusColor(pendaftaran.status),
                   fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              backgroundColor: _getStatusColor(pendaftaran.status),
             ),
           );
         },
@@ -424,13 +541,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case 'pending':
         return Icons.pending;
       case 'confirmed':
-        return Icons.check_circle;
+        return Icons.check_circle_outline;
       case 'completed':
-        return Icons.done_all;
+        return Icons.check_circle;
       case 'cancelled':
         return Icons.cancel;
       default:
-        return Icons.help;
+        return Icons.help_outline;
     }
   }
 
@@ -451,21 +568,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Paket MCU',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1A237E),
                     ),
                   ),
                   ElevatedButton.icon(
                     onPressed: () {
-                      // TODO: Implement add new package
+                      _showPaketForm(context, provider);
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('Tambah Paket'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: const Color(0xFF1A237E),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -495,55 +613,109 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    paket.namaPaket,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF1A237E).withOpacity(0.1),
+                              const Color(0xFF1A237E).withOpacity(0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      paket.namaPaket,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1A237E),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.edit),
-                                  onPressed: () {
-                                    // TODO: Implement edit package
-                                  },
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Rp ${paket.harga.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.green,
-                                fontWeight: FontWeight.bold,
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, color: Color(0xFF1A237E)),
+                                    onPressed: () {
+                                      _showPaketForm(context, provider, paket: paket);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Konfirmasi'),
+                                          content: const Text('Apakah Anda yakin ingin menghapus paket ini?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, false),
+                                              child: const Text('Batal'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, true),
+                                              child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      if (confirm == true) {
+                                        final success = await provider.deletePaketMCU(paket.id);
+                                        if (success && context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Paket berhasil dihapus'),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        } else if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(provider.error ?? 'Gagal menghapus paket'),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Expanded(
-                              child: Text(
-                                paket.deskripsi,
+                              const SizedBox(height: 8),
+                              Text(
+                                'Rp ${NumberFormat('#,##0.00', 'id_ID').format(paket.harga)}',
                                 style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
+                                  fontSize: 16,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Expanded(
+                                child: Text(
+                                  paket.deskripsi,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -554,6 +726,157 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showPaketForm(BuildContext context, PaketMCUProvider provider, {dynamic paket}) {
+    final _formKey = GlobalKey<FormState>();
+    final _namaController = TextEditingController(text: paket?.namaPaket ?? '');
+    final _hargaController = TextEditingController(text: paket?.harga.toString() ?? '');
+    final _deskripsiController = TextEditingController(text: paket?.deskripsi ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          paket == null ? 'Tambah Paket MCU' : 'Edit Paket MCU',
+          style: const TextStyle(
+            color: Color(0xFF1A237E),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _namaController,
+                  decoration: InputDecoration(
+                    labelText: 'Nama Paket',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF1A237E)),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Nama paket tidak boleh kosong';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _hargaController,
+                  decoration: InputDecoration(
+                    labelText: 'Harga',
+                    prefixText: 'Rp ',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF1A237E)),
+                    ),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Harga tidak boleh kosong';
+                    }
+                    if (double.tryParse(value) == null) {
+                      return 'Harga harus berupa angka';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _deskripsiController,
+                  decoration: InputDecoration(
+                    labelText: 'Deskripsi',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF1A237E)),
+                    ),
+                  ),
+                  maxLines: 3,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Deskripsi tidak boleh kosong';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (_formKey.currentState!.validate()) {
+                final paketData = {
+                  'nama_paket': _namaController.text,
+                  'harga': double.parse(_hargaController.text),
+                  'deskripsi': _deskripsiController.text,
+                };
+
+                bool success;
+                if (paket == null) {
+                  success = await provider.createPaket(paketData);
+                } else {
+                  success = await provider.updatePaket(paket.id, paketData);
+                }
+
+                if (success && mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        paket == null ? 'Paket berhasil ditambahkan' : 'Paket berhasil diperbarui',
+                      ),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1A237E),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(paket == null ? 'Tambah' : 'Simpan'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -836,8 +1159,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                   _buildStatCard(
                     'Total Pendapatan',
-                    'Rp ${totalPendapatan.toStringAsFixed(0)}',
-                    Icons.attach_money,
+                    'Rp ${NumberFormat('#,##0.00', 'id_ID').format(totalPendapatan)}',
+                    Icons.currency_exchange,
                     Colors.green,
                   ),
                   _buildStatCard(
@@ -891,7 +1214,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              'Rp ${pendaftaran.totalHarga.toStringAsFixed(0)}',
+                              'Rp ${NumberFormat('#,##0.00', 'id_ID').format(pendaftaran.totalHarga)}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green,

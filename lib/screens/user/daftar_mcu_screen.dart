@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/paket_mcu_provider.dart';
 import '../../providers/pendaftaran_provider.dart';
 import '../../providers/user_provider.dart';
@@ -260,9 +261,7 @@ class _DaftarMCUScreenState extends State<DaftarMCUScreen> {
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  const Icon(Icons.attach_money, color: Colors.green, size: 20),
-                                  const SizedBox(width: 4),
-                                  Text('Rp ${_selectedPaket!.harga.toStringAsFixed(0)}',
+                                  Text('Rp ${NumberFormat('#,##0.00', 'id_ID').format(_selectedPaket!.harga)}',
                                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
                                   ),
                                 ],

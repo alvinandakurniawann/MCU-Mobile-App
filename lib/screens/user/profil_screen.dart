@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
@@ -17,15 +18,56 @@ class _ProfilScreenState extends State<ProfilScreen> {
   bool _isUploading = false;
 
   Future<void> _pickImage() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-    );
-    if (result != null && result.files.single.path != null) {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+      
+      if (result != null && result.files.single.path != null) {
+        setState(() {
+          _isUploading = true;
+        });
+
+        final file = File(result.files.single.path!);
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${result.files.single.name}';
+        
+        // Upload file ke Supabase Storage
+        final supabase = Supabase.instance.client;
+        final response = await supabase.storage
+            .from('profile_photos')
+            .upload(fileName, file);
+
+        // Dapatkan URL publik
+        final imageUrl = supabase.storage
+            .from('profile_photos')
+            .getPublicUrl(fileName);
+
+        // Update foto profil di database
+        final userProvider = context.read<UserProvider>();
+        final success = await userProvider.updateProfilePhoto(imageUrl);
+
+        if (success) {
+          setState(() {
+            _imageFile = file;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Foto profil berhasil diperbarui')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Gagal memperbarui foto profil')),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
       setState(() {
-        _imageFile = File(result.files.single.path!);
+        _isUploading = false;
       });
-      // TODO: Upload ke backend dan update userProvider.currentUser.fotoProfil
     }
   }
 
@@ -66,9 +108,11 @@ class _ProfilScreenState extends State<ProfilScreen> {
                                   : (user.fotoProfil != null && user.fotoProfil!.isNotEmpty
                                       ? NetworkImage(user.fotoProfil!) as ImageProvider
                                       : null),
-                              child: (user.fotoProfil == null || user.fotoProfil!.isEmpty) && _imageFile == null
-                                  ? const Icon(Icons.person, size: 60, color: Color(0xFF1A237E))
-                                  : null,
+                              child: _isUploading
+                                  ? const CircularProgressIndicator()
+                                  : (user.fotoProfil == null || user.fotoProfil!.isEmpty) && _imageFile == null
+                                      ? const Icon(Icons.person, size: 60, color: Color(0xFF1A237E))
+                                      : null,
                             ),
                             Positioned(
                               bottom: 0,

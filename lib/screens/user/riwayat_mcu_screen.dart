@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/pendaftaran_provider.dart';
 
 class RiwayatMCUScreen extends StatefulWidget {
@@ -132,7 +133,7 @@ class _RiwayatMCUScreenState extends State<RiwayatMCUScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Total Biaya: ${pendaftaran.totalHarga.toStringAsFixed(0)}',
+                            'Total Biaya: Rp ${NumberFormat('#,##0.00', 'id_ID').format(pendaftaran.totalHarga)}',
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                           ),
                         ],

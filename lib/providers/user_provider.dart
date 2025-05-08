@@ -271,4 +271,42 @@ class UserProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> updateProfilePhoto(String photoUrl) async {
+    try {
+      _error = null;
+      _isLoading = true;
+      notifyListeners();
+
+      if (_currentUser == null) {
+        _error = 'User tidak ditemukan';
+        return false;
+      }
+
+      final now = DateTime.now().toIso8601String();
+      final response = await _supabase
+          .from('users')
+          .update({
+            'foto_profil': photoUrl,
+            'updated_at': now,
+          })
+          .eq('id', _currentUser!.id)
+          .select()
+          .single();
+
+      if (response != null) {
+        _currentUser = User.fromJson(response);
+        return true;
+      } else {
+        _error = 'Gagal memperbarui foto profil';
+        return false;
+      }
+    } catch (e) {
+      _error = 'Terjadi kesalahan: ${e.toString()}';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

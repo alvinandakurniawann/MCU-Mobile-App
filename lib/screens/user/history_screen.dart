@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/pendaftaran_provider.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -62,7 +63,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         'Jam: ${pendaftaran.tanggalPendaftaran.hour}:${pendaftaran.tanggalPendaftaran.minute.toString().padLeft(2, '0')}',
                       ),
                       Text(
-                          'Total: Rp ${pendaftaran.totalHarga.toStringAsFixed(0)}'),
+                          'Total: Rp ${NumberFormat('#,##0.00', 'id_ID').format(pendaftaran.totalHarga)}'),
                     ],
                   ),
                   trailing: Container(

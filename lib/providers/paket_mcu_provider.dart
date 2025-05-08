@@ -36,21 +36,29 @@ class PaketMCUProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> createPaketMCU(Map<String, dynamic> paketData) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  Future<bool> createPaket(Map<String, dynamic> paketData) async {
     try {
-      final response =
-          await _supabase.from('paket_mcu').insert(paketData).select().single();
+      _isLoading = true;
+      notifyListeners();
 
-      final newPaket = PaketMCU.fromJson(response);
-      _paketList = [newPaket, ..._paketList];
-      _error = null;
-      return true;
+      final response = await _supabase
+          .from('paket_mcu')
+          .insert({
+            ...paketData,
+            'created_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .select()
+          .single();
+
+      if (response != null) {
+        _paketList.add(PaketMCU.fromJson(response));
+        notifyListeners();
+        return true;
+      }
+      return false;
     } catch (e) {
-      _error = 'Terjadi kesalahan saat membuat paket MCU';
+      print('Error creating paket: $e');
       return false;
     } finally {
       _isLoading = false;
@@ -58,30 +66,32 @@ class PaketMCUProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updatePaketMCU(String id, Map<String, dynamic> paketData) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  Future<bool> updatePaket(String id, Map<String, dynamic> paketData) async {
     try {
+      _isLoading = true;
+      notifyListeners();
+
       final response = await _supabase
           .from('paket_mcu')
-          .update(paketData)
+          .update({
+            ...paketData,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
           .eq('id', id)
           .select()
           .single();
 
-      final updatedPaket = PaketMCU.fromJson(response);
-      _paketList = _paketList.map((paket) {
-        if (paket.id == updatedPaket.id) {
-          return updatedPaket;
+      if (response != null) {
+        final index = _paketList.indexWhere((p) => p.id == id);
+        if (index != -1) {
+          _paketList[index] = PaketMCU.fromJson(response);
+          notifyListeners();
         }
-        return paket;
-      }).toList();
-      _error = null;
-      return true;
+        return true;
+      }
+      return false;
     } catch (e) {
-      _error = 'Terjadi kesalahan saat memperbarui paket MCU';
+      print('Error updating paket: $e');
       return false;
     } finally {
       _isLoading = false;
