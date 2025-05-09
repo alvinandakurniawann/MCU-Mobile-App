@@ -155,11 +155,10 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final hashedPassword = _hashPassword(password);
-
-      // Cek apakah admin ada di tabel admin
+      print('DEBUG loginAdmin: username=[32m$username[0m, hash=[34m$hashedPassword[0m');
       final adminResponse = await _supabase
           .from('admin')
-          .select('id, username, nama_lengkap, jabatan')
+          .select()
           .eq('username', username)
           .eq('password', hashedPassword)
           .maybeSingle();

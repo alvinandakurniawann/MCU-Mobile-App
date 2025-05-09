@@ -514,42 +514,133 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       separatorBuilder: (context, index) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final pendaftaran = provider.pendaftaranList[index];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
-                            child: Icon(
-                              _getStatusIcon(pendaftaran.status),
-                              color: _getStatusColor(pendaftaran.status),
-                            ),
-                          ),
-                          title: Text(
-                            pendaftaran.user.namaLengkap ?? '-',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Column(
                             children: [
-                              Text(pendaftaran.paketMcu.namaPaket),
-                              Text(
-                                'Tanggal: ${DateFormat('dd MMM yyyy HH:mm').format(pendaftaran.tanggalPendaftaran)}',
-                                style: const TextStyle(fontSize: 12),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: pendaftaran.status.toLowerCase() == 'completed'
+                                        ? Colors.green.withOpacity(0.1)
+                                        : pendaftaran.status.toLowerCase() == 'cancelled'
+                                            ? Colors.red.withOpacity(0.1)
+                                            : Colors.orange.withOpacity(0.1),
+                                    child: Icon(
+                                      pendaftaran.status.toLowerCase() == 'completed'
+                                          ? Icons.check_circle
+                                          : pendaftaran.status.toLowerCase() == 'cancelled'
+                                              ? Icons.cancel
+                                              : Icons.pending,
+                                      color: pendaftaran.status.toLowerCase() == 'completed'
+                                          ? Colors.green
+                                          : pendaftaran.status.toLowerCase() == 'cancelled'
+                                              ? Colors.red
+                                              : Colors.orange,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                pendaftaran.user.namaLengkap ?? '-',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            PopupMenuButton<String>(
+                                              onSelected: (String newStatus) async {
+                                                if (newStatus != pendaftaran.status) {
+                                                  await _updateStatus(pendaftaran.id, newStatus);
+                                                }
+                                              },
+                                              color: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              itemBuilder: (context) => [
+                                                PopupMenuItem(
+                                                  value: 'pending',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(Icons.pending, color: Colors.orange),
+                                                      SizedBox(width: 8),
+                                                      Text('Pending'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'completed',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(Icons.check_circle, color: Colors.green),
+                                                      SizedBox(width: 8),
+                                                      Text('Completed'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'cancelled',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(Icons.cancel, color: Colors.red),
+                                                      SizedBox(width: 8),
+                                                      Text('Canceled'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: _getStatusColor(pendaftaran.status),
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      pendaftaran.status,
+                                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    const Icon(
+                                                      Icons.arrow_drop_down,
+                                                      color: Colors.white,
+                                                      size: 18,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Text(
+                                          pendaftaran.paketMcu.namaPaket,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey[800]),
+                                        ),
+                                        Text(
+                                          'Tanggal: ${DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(pendaftaran.tanggalPendaftaran)}',
+                                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
+                              const SizedBox(height: 8),
+                              const Divider(height: 1),
                             ],
-                          ),
-                          trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(pendaftaran.status),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              pendaftaran.status,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                           ),
                         );
                       },
@@ -638,139 +729,134 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       separatorBuilder: (context, index) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final pendaftaran = filteredList[index];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
-                            child: Icon(
-                              _getStatusIcon(pendaftaran.status),
-                              color: _getStatusColor(pendaftaran.status),
-                            ),
-                          ),
-                          title: Text(
-                            pendaftaran.user.namaLengkap ?? '-',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Column(
                             children: [
-                              Text(pendaftaran.paketMcu.namaPaket),
-                              Text(
-                                'Tanggal: ${DateFormat('dd MMM yyyy HH:mm').format(pendaftaran.tanggalPendaftaran)}',
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ],
-                          ),
-                          trailing: (status == 'pending')
-                              ? PopupMenuButton<String>(
-                                  onSelected: (String newStatus) async {
-                                    if (newStatus != pendaftaran.status) {
-                                      await _updateStatus(pendaftaran.id, newStatus);
-                                      Navigator.pop(context);
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: 'completed',
-                                      child: Row(
-                                        children: const [
-                                          Icon(Icons.check_circle, color: Colors.green),
-                                          SizedBox(width: 8),
-                                          Text('Completed'),
-                                        ],
-                                      ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: pendaftaran.status.toLowerCase() == 'completed'
+                                        ? Colors.green.withOpacity(0.1)
+                                        : pendaftaran.status.toLowerCase() == 'cancelled'
+                                            ? Colors.red.withOpacity(0.1)
+                                            : Colors.orange.withOpacity(0.1),
+                                    child: Icon(
+                                      pendaftaran.status.toLowerCase() == 'completed'
+                                          ? Icons.check_circle
+                                          : pendaftaran.status.toLowerCase() == 'cancelled'
+                                              ? Icons.cancel
+                                              : Icons.pending,
+                                      color: pendaftaran.status.toLowerCase() == 'completed'
+                                          ? Colors.green
+                                          : pendaftaran.status.toLowerCase() == 'cancelled'
+                                              ? Colors.red
+                                              : Colors.orange,
                                     ),
-                                    PopupMenuItem(
-                                      value: 'cancelled',
-                                      child: Row(
-                                        children: const [
-                                          Icon(Icons.cancel, color: Colors.red),
-                                          SizedBox(width: 8),
-                                          Text('Cancelled'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: _getStatusColor(pendaftaran.status),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          pendaftaran.status,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                pendaftaran.user.namaLengkap ?? '-',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            PopupMenuButton<String>(
+                                              onSelected: (String newStatus) async {
+                                                if (newStatus != pendaftaran.status) {
+                                                  await _updateStatus(pendaftaran.id, newStatus);
+                                                }
+                                              },
+                                              color: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              itemBuilder: (context) => [
+                                                PopupMenuItem(
+                                                  value: 'pending',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(Icons.pending, color: Colors.orange),
+                                                      SizedBox(width: 8),
+                                                      Text('Pending'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'completed',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(Icons.check_circle, color: Colors.green),
+                                                      SizedBox(width: 8),
+                                                      Text('Completed'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'cancelled',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(Icons.cancel, color: Colors.red),
+                                                      SizedBox(width: 8),
+                                                      Text('Canceled'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: _getStatusColor(pendaftaran.status),
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      pendaftaran.status,
+                                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    const Icon(
+                                                      Icons.arrow_drop_down,
+                                                      color: Colors.white,
+                                                      size: 18,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 4),
-                                        const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+                                        Text(
+                                          pendaftaran.paketMcu.namaPaket,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey[800]),
+                                        ),
+                                        Text(
+                                          'Tanggal: ${DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(pendaftaran.tanggalPendaftaran)}',
+                                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                        ),
                                       ],
                                     ),
                                   ),
-                                )
-                              : (status == 'completed' || pendaftaran.status.toLowerCase() == 'cancelled')
-                                  ? PopupMenuButton<String>(
-                                      onSelected: (String newStatus) async {
-                                        if (newStatus != pendaftaran.status) {
-                                          await _updateStatus(pendaftaran.id, newStatus);
-                                          Navigator.pop(context);
-                                        }
-                                      },
-                                      itemBuilder: (context) => [
-                                        PopupMenuItem(
-                                          value: 'pending',
-                                          child: Row(
-                                            children: const [
-                                              Icon(Icons.pending, color: Colors.orange),
-                                              SizedBox(width: 8),
-                                              Text('Pending'),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: _getStatusColor(pendaftaran.status),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              pendaftaran.status,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  : Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: _getStatusColor(pendaftaran.status),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        pendaftaran.status,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              const Divider(height: 1),
+                            ],
+                          ),
                         );
                       },
                     );
@@ -936,7 +1022,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             subtitle: Text(
-              '${pendaftaran.paketMcu.namaPaket} - ${DateFormat('dd MMM yyyy').format(pendaftaran.tanggalPendaftaran)}',
+              '${pendaftaran.paketMcu.namaPaket} - ${DateFormat('HH:mm').format(pendaftaran.tanggalPendaftaran)}',
             ),
             trailing: PopupMenuButton<String>(
               onSelected: (String newStatus) async {
@@ -1499,46 +1585,133 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           separatorBuilder: (context, index) => const Divider(height: 1),
                           itemBuilder: (context, index) {
                             final pendaftaran = filteredList[index];
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.blue.withOpacity(0.1),
-                                child: Text(
-                                  (pendaftaran.user.namaLengkap != null && pendaftaran.user.namaLengkap!.isNotEmpty)
-                                      ? pendaftaran.user.namaLengkap![0].toUpperCase()
-                                      : '-',
-                                  style: const TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              title: Text(
-                                pendaftaran.user.namaLengkap ?? '-',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Column(
                                 children: [
-                                  Text(pendaftaran.user.email ?? 'No email'),
-                                  Text(
-                                    'Paket: ${pendaftaran.paketMcu.namaPaket}',
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                    ),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundColor: pendaftaran.status.toLowerCase() == 'completed'
+                                            ? Colors.green.withOpacity(0.1)
+                                            : pendaftaran.status.toLowerCase() == 'cancelled'
+                                                ? Colors.red.withOpacity(0.1)
+                                                : Colors.orange.withOpacity(0.1),
+                                        child: Icon(
+                                          pendaftaran.status.toLowerCase() == 'completed'
+                                              ? Icons.check_circle
+                                              : pendaftaran.status.toLowerCase() == 'cancelled'
+                                                  ? Icons.cancel
+                                                  : Icons.pending,
+                                          color: pendaftaran.status.toLowerCase() == 'completed'
+                                              ? Colors.green
+                                              : pendaftaran.status.toLowerCase() == 'cancelled'
+                                                  ? Colors.red
+                                                  : Colors.orange,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    pendaftaran.user.namaLengkap ?? '-',
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                PopupMenuButton<String>(
+                                                  onSelected: (String newStatus) async {
+                                                    if (newStatus != pendaftaran.status) {
+                                                      await _updateStatus(pendaftaran.id, newStatus);
+                                                    }
+                                                  },
+                                                  color: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                  ),
+                                                  itemBuilder: (context) => [
+                                                    PopupMenuItem(
+                                                      value: 'pending',
+                                                      child: Row(
+                                                        children: const [
+                                                          Icon(Icons.pending, color: Colors.orange),
+                                                          SizedBox(width: 8),
+                                                          Text('Pending'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    PopupMenuItem(
+                                                      value: 'completed',
+                                                      child: Row(
+                                                        children: const [
+                                                          Icon(Icons.check_circle, color: Colors.green),
+                                                          SizedBox(width: 8),
+                                                          Text('Completed'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    PopupMenuItem(
+                                                      value: 'cancelled',
+                                                      child: Row(
+                                                        children: const [
+                                                          Icon(Icons.cancel, color: Colors.red),
+                                                          SizedBox(width: 8),
+                                                          Text('Canceled'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                    decoration: BoxDecoration(
+                                                      color: _getStatusColor(pendaftaran.status),
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Text(
+                                                          pendaftaran.status,
+                                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                                        ),
+                                                        const SizedBox(width: 4),
+                                                        const Icon(
+                                                          Icons.arrow_drop_down,
+                                                          color: Colors.white,
+                                                          size: 18,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Text(
+                                              pendaftaran.paketMcu.namaPaket,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey[800]),
+                                            ),
+                                            Text(
+                                              'Tanggal: ${DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(pendaftaran.tanggalPendaftaran)}',
+                                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                  const SizedBox(height: 8),
+                                  const Divider(height: 1),
                                 ],
-                              ),
-                              trailing: Chip(
-                                label: Text(
-                                  pendaftaran.status,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                backgroundColor: _getStatusColor(pendaftaran.status),
                               ),
                             );
                           },
@@ -1665,34 +1838,133 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               separatorBuilder: (context, index) => const Divider(height: 1),
                               itemBuilder: (context, index) {
                                 final pendaftaran = provider.pendaftaranList[index];
-                                return ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
-                                    child: Icon(
-                                      _getStatusIcon(pendaftaran.status),
-                                      color: _getStatusColor(pendaftaran.status),
-                                    ),
-                                  ),
-                                  title: Text(
-                                    pendaftaran.user.namaLengkap ?? '-',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  subtitle: Text(
-                                    '${pendaftaran.paketMcu.namaPaket} - ${DateFormat('dd MMM yyyy').format(pendaftaran.tanggalPendaftaran)}',
-                                  ),
-                                  trailing: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: _getStatusColor(pendaftaran.status),
-                                        borderRadius: BorderRadius.circular(12),
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          CircleAvatar(
+                                            backgroundColor: pendaftaran.status.toLowerCase() == 'completed'
+                                                ? Colors.green.withOpacity(0.1)
+                                                : pendaftaran.status.toLowerCase() == 'cancelled'
+                                                    ? Colors.red.withOpacity(0.1)
+                                                    : Colors.orange.withOpacity(0.1),
+                                            child: Icon(
+                                              pendaftaran.status.toLowerCase() == 'completed'
+                                                  ? Icons.check_circle
+                                                  : pendaftaran.status.toLowerCase() == 'cancelled'
+                                                      ? Icons.cancel
+                                                      : Icons.pending,
+                                              color: pendaftaran.status.toLowerCase() == 'completed'
+                                                  ? Colors.green
+                                                  : pendaftaran.status.toLowerCase() == 'cancelled'
+                                                      ? Colors.red
+                                                      : Colors.orange,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        pendaftaran.user.namaLengkap ?? '-',
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    PopupMenuButton<String>(
+                                                      onSelected: (String newStatus) async {
+                                                        if (newStatus != pendaftaran.status) {
+                                                          await _updateStatus(pendaftaran.id, newStatus);
+                                                        }
+                                                      },
+                                                      color: Colors.white,
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(12),
+                                                      ),
+                                                      itemBuilder: (context) => [
+                                                        PopupMenuItem(
+                                                          value: 'pending',
+                                                          child: Row(
+                                                            children: const [
+                                                              Icon(Icons.pending, color: Colors.orange),
+                                                              SizedBox(width: 8),
+                                                              Text('Pending'),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        PopupMenuItem(
+                                                          value: 'completed',
+                                                          child: Row(
+                                                            children: const [
+                                                              Icon(Icons.check_circle, color: Colors.green),
+                                                              SizedBox(width: 8),
+                                                              Text('Completed'),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        PopupMenuItem(
+                                                          value: 'cancelled',
+                                                          child: Row(
+                                                            children: const [
+                                                              Icon(Icons.cancel, color: Colors.red),
+                                                              SizedBox(width: 8),
+                                                              Text('Canceled'),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                      child: Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                        decoration: BoxDecoration(
+                                                          color: _getStatusColor(pendaftaran.status),
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                        child: Row(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            Text(
+                                                              pendaftaran.status,
+                                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                                            ),
+                                                            const SizedBox(width: 4),
+                                                            const Icon(
+                                                              Icons.arrow_drop_down,
+                                                              color: Colors.white,
+                                                              size: 18,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Text(
+                                                  pendaftaran.paketMcu.namaPaket,
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey[800]),
+                                                ),
+                                                Text(
+                                                  'Tanggal: ${DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(pendaftaran.tanggalPendaftaran)}',
+                                                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      child: Text(
-                                        pendaftaran.status,
-                                        style: const TextStyle(fontSize: 12, color: Colors.white),
-                                      ),
-                                    ),
+                                      const SizedBox(height: 8),
+                                      const Divider(height: 1),
+                                    ],
                                   ),
                                 );
                               },
@@ -1736,26 +2008,69 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             itemCount: provider.pendaftaranList.length,
             itemBuilder: (context, index) {
               final pendaftaran = provider.pendaftaranList[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.blue.withOpacity(0.1),
-                  child: Text(
-                    (pendaftaran.user.namaLengkap != null && pendaftaran.user.namaLengkap!.isNotEmpty)
-                        ? pendaftaran.user.namaLengkap![0].toUpperCase()
-                        : '-',
-                    style: const TextStyle(color: Colors.blue),
-                  ),
-                ),
-                title: Text(pendaftaran.user.namaLengkap ?? '-'),
-                subtitle: Text(
-                  '${pendaftaran.paketMcu.namaPaket}\n${DateFormat('dd MMM yyyy').format(pendaftaran.tanggalPendaftaran)}',
-                ),
-                trailing: Chip(
-                  label: Text(
-                    pendaftaran.status,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                  backgroundColor: _getStatusColor(pendaftaran.status),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: pendaftaran.status.toLowerCase() == 'completed'
+                          ? Colors.purple.withOpacity(0.1)
+                          : pendaftaran.status.toLowerCase() == 'cancelled'
+                              ? Colors.red.withOpacity(0.1)
+                              : Colors.blue.withOpacity(0.1),
+                      child: pendaftaran.status.toLowerCase() == 'completed' || pendaftaran.status.toLowerCase() == 'cancelled'
+                          ? Icon(
+                              pendaftaran.status.toLowerCase() == 'completed' ? Icons.check_circle : Icons.cancel,
+                              color: pendaftaran.status.toLowerCase() == 'completed' ? Colors.purple : Colors.red,
+                            )
+                          : Text(
+                              (pendaftaran.user.namaLengkap != null && pendaftaran.user.namaLengkap!.isNotEmpty)
+                                  ? pendaftaran.user.namaLengkap![0].toUpperCase()
+                                  : '-',
+                              style: const TextStyle(color: Colors.blue),
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  pendaftaran.user.namaLengkap ?? '-',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Chip(
+                                label: Text(
+                                  pendaftaran.status,
+                                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                                ),
+                                backgroundColor: _getStatusColor(pendaftaran.status),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            pendaftaran.paketMcu.namaPaket,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey[800]),
+                          ),
+                          Text(
+                            'Tanggal: ${DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(pendaftaran.tanggalPendaftaran)}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -1801,46 +2116,76 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   itemCount: completedPendaftaran.length,
                   itemBuilder: (context, index) {
                     final pendaftaran = completedPendaftaran[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: pendaftaran.status.toLowerCase() == 'completed'
-                            ? Colors.purple.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
-                        child: Icon(
-                          pendaftaran.status.toLowerCase() == 'completed'
-                              ? Icons.check_circle
-                              : Icons.cancel,
-                          color: pendaftaran.status.toLowerCase() == 'completed'
-                              ? Colors.purple
-                              : Colors.red,
-                        ),
-                      ),
-                      title: Text(pendaftaran.user.namaLengkap ?? '-'),
-                      subtitle: Text(
-                        '${pendaftaran.paketMcu.namaPaket}\n${DateFormat('dd MMM yyyy').format(pendaftaran.tanggalPendaftaran)}',
-                      ),
-                      trailing: pendaftaran.status.toLowerCase() == 'completed'
-                          ? Text(
-                              'Rp ${NumberFormat('#,##0.00', 'id_ID').format(pendaftaran.totalHarga)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.purple,
-                              ),
-                            )
-                          : Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Text(
-                                'Dibatalkan',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: pendaftaran.status.toLowerCase() == 'completed'
+                                ? Colors.purple.withOpacity(0.1)
+                                : Colors.red.withOpacity(0.1),
+                            child: Icon(
+                              pendaftaran.status.toLowerCase() == 'completed' ? Icons.check_circle : Icons.cancel,
+                              color: pendaftaran.status.toLowerCase() == 'completed' ? Colors.purple : Colors.red,
                             ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        pendaftaran.user.namaLengkap ?? '-',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    pendaftaran.status.toLowerCase() == 'completed'
+                                        ? Text(
+                                            'Rp ${NumberFormat('#,##0.00', 'id_ID').format(pendaftaran.totalHarga)}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.purple,
+                                              fontSize: 13,
+                                            ),
+                                          )
+                                        : Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: const Text(
+                                              'Dibatalkan',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+                                  ],
+                                ),
+                                Text(
+                                  pendaftaran.paketMcu.namaPaket,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey[800]),
+                                ),
+                                Text(
+                                  'Tanggal: ${DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(pendaftaran.tanggalPendaftaran)}',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -1910,12 +2255,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   (entry) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
                             entry.key,
                             style: const TextStyle(fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Text(
@@ -1923,7 +2268,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.green,
+                            fontSize: 14,
                           ),
+                          textAlign: TextAlign.right,
                         ),
                       ],
                     ),
@@ -1933,11 +2280,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Total Pendapatan:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                  const Expanded(
+                    child: Text(
+                      'Total Pendapatan:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                   Text(
@@ -1947,6 +2296,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       fontSize: 16,
                       color: Colors.green,
                     ),
+                    textAlign: TextAlign.right,
                   ),
                 ],
               ),
