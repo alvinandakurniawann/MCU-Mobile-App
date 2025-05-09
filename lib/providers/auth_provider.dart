@@ -29,33 +29,33 @@ class AuthProvider with ChangeNotifier {
     return hash.toString();
   }
 
-  Future<bool> login(String username, String password) async {
+  Future<bool> login(String email, String password) async {
     try {
       _error = null;
       _isLoading = true;
       notifyListeners();
 
-      final hashedPassword = _hashPassword(password);
+      final response = await _supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
 
-      final result =
-          await _supabase.from('users').select().eq('username', username);
-
-      if (result.isEmpty) {
-        _error = 'Username tidak ditemukan';
+      if (response.user == null) {
+        _error = 'Email atau password salah';
         return false;
       }
 
-      final user = result.first;
-      if (user['password'] != hashedPassword) {
-        _error = 'Password salah';
-        return false;
-      }
+      // Ambil data user dari tabel users
+      final userData = await _supabase
+          .from('users')
+          .select()
+          .eq('id', response.user!.id)
+          .single();
 
-      _currentUser = User.fromJson(user);
+      _currentUser = User.fromJson(userData);
       _isAdmin = false;
       _error = null;
 
-      // Update UserProvider
       if (_userProvider != null) {
         await _userProvider.setCurrentUser(_currentUser);
       }
@@ -71,11 +71,11 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<bool> register({
-    required String username,
+    required String email,
     required String password,
+    required String username,
     required String namaLengkap,
-    required String noKtp,
-    String? email,
+    String? noKtp,
     required String jenisKelamin,
     required String tempatLahir,
     required String tanggalLahir,
@@ -87,53 +87,41 @@ class AuthProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      // Check if username exists
-      final existingUser =
-          await _supabase.from('users').select().eq('username', username);
-      if (existingUser.isNotEmpty) {
-        _error = 'Username sudah digunakan';
+      final response = await _supabase.auth.signUp(
+        email: email,
+        password: password,
+      );
+
+      if (response.user == null) {
+        _error = 'Gagal registrasi user';
         return false;
       }
 
-      // Check if KTP exists
-      final existingKtp =
-          await _supabase.from('users').select().eq('no_ktp', noKtp);
-      if (existingKtp.isNotEmpty) {
-        _error = 'Nomor KTP sudah terdaftar';
-        return false;
-      }
-
-      final hashedPassword = _hashPassword(password);
+      // Simpan data tambahan ke tabel users
       final now = DateTime.now().toIso8601String();
+      await _supabase.from('users').insert({
+        'id': response.user!.id,
+        'email': email,
+        'username': username,
+        'nama_lengkap': namaLengkap,
+        'no_ktp': noKtp,
+        'jenis_kelamin': jenisKelamin.toUpperCase(),
+        'tempat_lahir': tempatLahir,
+        'tanggal_lahir': tanggalLahir,
+        'alamat': alamat,
+        'no_handphone': noHandphone,
+        'created_at': now,
+        'updated_at': now,
+      });
 
-      final response = await _supabase
-          .from('users')
-          .insert({
-            'username': username,
-            'password': hashedPassword,
-            'nama_lengkap': namaLengkap,
-            'no_ktp': noKtp,
-            'email': email,
-            'jenis_kelamin': jenisKelamin.toUpperCase(),
-            'tempat_lahir': tempatLahir,
-            'tanggal_lahir': tanggalLahir,
-            'alamat': alamat,
-            'no_handphone': noHandphone,
-            'created_at': now,
-            'updated_at': now,
-          })
-          .select()
-          .single();
-
-      if (response != null) {
-        _currentUser = User.fromJson(response);
-        return true;
-      } else {
-        _error = 'Gagal menyimpan data pengguna';
-        return false;
-      }
+      return true;
     } catch (e) {
-      _error = 'Terjadi kesalahan: ${e.toString()}';
+      final msg = e.toString();
+      if (msg.contains('already registered')) {
+        _error = 'Email sudah digunakan';
+      } else {
+        _error = msg;
+      }
       return false;
     } finally {
       _isLoading = false;
@@ -142,6 +130,9 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
+    if (!_isAdmin) {
+      await _supabase.auth.signOut();
+    }
     _currentUser = null;
     _error = null;
     _isAdmin = false;
@@ -170,23 +161,11 @@ class AuthProvider with ChangeNotifier {
           .from('admin')
           .select('id, username, nama_lengkap, jabatan')
           .eq('username', username)
+          .eq('password', hashedPassword)
           .maybeSingle();
 
       if (adminResponse == null) {
-        _error = 'Username admin tidak ditemukan';
-        return false;
-      }
-
-      // Verifikasi password secara terpisah untuk keamanan
-      final passwordCheck = await _supabase
-          .from('admin')
-          .select('password')
-          .eq('username', username)
-          .maybeSingle();
-
-      if (passwordCheck == null ||
-          passwordCheck['password'] != hashedPassword) {
-        _error = 'Password salah';
+        _error = 'Username atau password admin salah';
         return false;
       }
 
@@ -195,7 +174,7 @@ class AuthProvider with ChangeNotifier {
       _error = null;
       return true;
     } catch (e) {
-      _error = 'Username atau password admin salah';
+      _error = 'Terjadi kesalahan saat login admin';
       return false;
     } finally {
       _isLoading = false;
@@ -210,6 +189,10 @@ class AuthProvider with ChangeNotifier {
     required String jabatan,
   }) async {
     try {
+      _error = null;
+      _isLoading = true;
+      notifyListeners();
+
       // Cek username yang sudah ada
       final existingAdmin = await _supabase
           .from('admin')
@@ -218,23 +201,31 @@ class AuthProvider with ChangeNotifier {
           .maybeSingle();
 
       if (existingAdmin != null) {
-        throw Exception('Username admin sudah digunakan');
+        _error = 'Username admin sudah digunakan';
+        return false;
       }
 
       // Hash password sebelum disimpan
       final hashedPassword = _hashPassword(password);
 
       // Insert admin baru
+      final now = DateTime.now().toIso8601String();
       await _supabase.from('admin').insert({
         'username': username,
         'password': hashedPassword,
         'nama_lengkap': namaLengkap,
         'jabatan': jabatan,
+        'created_at': now,
+        'updated_at': now,
       });
 
       return true;
     } catch (e) {
-      rethrow;
+      _error = 'Terjadi kesalahan saat registrasi admin';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 }

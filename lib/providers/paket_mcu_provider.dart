@@ -39,7 +39,22 @@ class PaketMCUProvider with ChangeNotifier {
   Future<bool> createPaket(Map<String, dynamic> paketData) async {
     try {
       _isLoading = true;
+      _error = null;
       notifyListeners();
+
+      // Validate required fields
+      if (paketData['nama_paket'] == null || paketData['nama_paket'].toString().isEmpty) {
+        _error = 'Nama paket tidak boleh kosong';
+        return false;
+      }
+      if (paketData['harga'] == null || paketData['harga'] <= 0) {
+        _error = 'Harga harus lebih dari 0';
+        return false;
+      }
+      if (paketData['deskripsi'] == null || paketData['deskripsi'].toString().isEmpty) {
+        _error = 'Deskripsi tidak boleh kosong';
+        return false;
+      }
 
       final response = await _supabase
           .from('paket_mcu')
@@ -56,9 +71,11 @@ class PaketMCUProvider with ChangeNotifier {
         notifyListeners();
         return true;
       }
+      _error = 'Gagal membuat paket baru';
       return false;
     } catch (e) {
       print('Error creating paket: $e');
+      _error = 'Terjadi kesalahan saat membuat paket: ${e.toString()}';
       return false;
     } finally {
       _isLoading = false;

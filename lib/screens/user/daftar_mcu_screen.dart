@@ -35,7 +35,7 @@ class _DaftarMCUScreenState extends State<DaftarMCUScreen> {
         final userProvider = context.read<UserProvider>();
         final currentUser = userProvider.currentUser;
         if (currentUser != null) {
-          await userProvider.loadCurrentUser(currentUser.username);
+          await userProvider.loadCurrentUser(currentUser.username ?? '');
         }
       }
     });
@@ -135,7 +135,7 @@ class _DaftarMCUScreenState extends State<DaftarMCUScreen> {
         if (currentUser != null) {
           await context
               .read<UserProvider>()
-              .loadCurrentUser(currentUser.username);
+              .loadCurrentUser(currentUser.username ?? '');
         }
 
         final user = context.read<UserProvider>().currentUser;

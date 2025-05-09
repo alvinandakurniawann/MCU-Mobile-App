@@ -38,6 +38,36 @@ class PendaftaranProvider with ChangeNotifier {
     }
   }
 
+  Future<void> loadUserPendaftaranList(String userId) async {
+    if (_isLoading) return;
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _supabase
+          .from('pendaftaran')
+          .select('''
+            *,
+            user:user_id(*),
+            paket_mcu:paket_mcu_id(*)
+          ''')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      _pendaftaranList = (response as List<dynamic>)
+          .map((json) => PendaftaranMCU.fromJson(json))
+          .toList();
+      _error = null;
+    } catch (e) {
+      _error = 'Terjadi kesalahan saat memuat data pendaftaran';
+      _pendaftaranList = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> createPendaftaran({
     required String userId,
     required String paketMcuId,

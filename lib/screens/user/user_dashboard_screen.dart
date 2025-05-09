@@ -20,9 +20,19 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   bool _isLoading = true;
   int _carouselIndex = 0;
 
-  final List<String> _carouselImages = [
-    'assets/images/carousel1.jpg',
-    'assets/images/carousel2.jpg',
+  final List<Map<String, dynamic>> _carouselItems = [
+    {
+      'image': 'assets/images/carousel1.jpg',
+      'title': 'Medical Check Up',
+      'description': 'Layanan pemeriksaan kesehatan menyeluruh untuk semua masyarakat',
+      'color': const Color(0xFF1A237E),
+    },
+    {
+      'image': 'assets/images/carousel2.jpg',
+      'title': 'Layanan MCU',
+      'description': 'Pemeriksaan kesehatan berkala untuk menjaga kesehatan Anda',
+      'color': const Color(0xFF5B86E5),
+    },
   ];
 
   @override
@@ -30,6 +40,10 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     super.initState();
     _isLoading = true;
     Future.microtask(() async {
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.currentUser != null) {
+        await userProvider.loadCurrentUser(userProvider.currentUser!.username ?? '');
+      }
       if (!mounted) return;
       await _loadData();
     });
@@ -50,112 +64,35 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWebLayout = constraints.maxWidth > 600;
-
-          if (isWebLayout) {
-            return Row(
-              children: [
-                NavigationRail(
-                  extended: constraints.maxWidth > 800,
-                  selectedIndex: _selectedIndex,
-                  onDestinationSelected: (int index) {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                  },
-                  backgroundColor: const Color(0xFF1A237E),
-                  selectedIconTheme: const IconThemeData(color: Colors.white),
-                  selectedLabelTextStyle: const TextStyle(color: Colors.white),
-                  unselectedIconTheme: IconThemeData(color: Colors.white.withOpacity(0.7)),
-                  unselectedLabelTextStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                  destinations: const [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home_outlined),
-                      selectedIcon: Icon(Icons.home),
-                      label: Text('Beranda'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.medical_services_outlined),
-                      selectedIcon: Icon(Icons.medical_services),
-                      label: Text('Daftar MCU'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.history_outlined),
-                      selectedIcon: Icon(Icons.history),
-                      label: Text('Riwayat MCU'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.person_outline),
-                      selectedIcon: Icon(Icons.person),
-                      label: Text('Profil'),
-                    ),
-                  ],
-                ),
-                const VerticalDivider(thickness: 1, width: 1),
-                Expanded(
-                  child: _buildSelectedScreen(),
-                ),
-              ],
-            );
-          }
-
-          return Column(
-            children: [
-              Expanded(
-                child: _buildSelectedScreen(),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: BottomNavigationBar(
-                  currentIndex: _selectedIndex,
-                  onTap: (index) {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                  },
-                  type: BottomNavigationBarType.fixed,
-                  backgroundColor: Colors.white,
-                  selectedItemColor: const Color(0xFF1A237E),
-                  unselectedItemColor: Colors.grey,
-                  selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                  items: const [
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.home_outlined),
-                      activeIcon: Icon(Icons.home),
-                      label: 'Beranda',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.medical_services_outlined),
-                      activeIcon: Icon(Icons.medical_services),
-                      label: 'Daftar MCU',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.history_outlined),
-                      activeIcon: Icon(Icons.history),
-                      label: 'Riwayat MCU',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.person_outline),
-                      activeIcon: Icon(Icons.person),
-                      label: 'Profil',
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
+      body: _buildSelectedScreen(),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
         },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: const Color(0xFF1A237E),
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Beranda',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.medical_services),
+            label: 'Daftar MCU',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Riwayat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profil',
+          ),
+        ],
       ),
     );
   }
@@ -204,12 +141,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         }
 
         final userPendaftaran = pendaftaranProvider.pendaftaranList
-            .where((p) =>
-                p.user.id == user.id && p.status.toLowerCase() != 'completed')
+            .where((p) => p.user.id == user.id)
             .toList();
-
-        userPendaftaran.sort(
-            (a, b) => a.tanggalPendaftaran.compareTo(b.tanggalPendaftaran));
 
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -217,215 +150,341 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
             final padding = isWebLayout ? 24.0 : 16.0;
 
             return SingleChildScrollView(
-              padding: EdgeInsets.all(padding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header Section
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF1A237E), Color(0xFF5B86E5), Color(0xFF36D1C4)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
+              child: Padding(
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Welcome Section
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF1A237E), Color(0xFF5B86E5)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF1A237E).withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              if (user.fotoProfil != null && user.fotoProfil!.isNotEmpty) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    insetPadding: const EdgeInsets.all(16),
+                                    child: InteractiveViewer(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(100),
+                                        child: Image.network(
+                                          user.fotoProfil!,
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.white,
+                              backgroundImage: (user.fotoProfil != null && user.fotoProfil!.isNotEmpty)
+                                  ? NetworkImage(user.fotoProfil!)
+                                  : null,
+                              child: (user.fotoProfil == null || user.fotoProfil!.isEmpty)
+                                  ? Text(
+                                      (user.namaLengkap != null && user.namaLengkap!.isNotEmpty)
+                                          ? user.namaLengkap![0].toUpperCase()
+                                          : '-',
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1A237E),
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Hello,',
                                   style: TextStyle(
-                                    fontSize: isWebLayout ? 24 : 20,
+                                    fontSize: isWebLayout ? 16 : 14,
                                     color: Colors.white.withOpacity(0.8),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  user.namaLengkap,
-                                  style: TextStyle(
-                                    fontSize: isWebLayout ? 28 : 24,
+                                  user.namaLengkap ?? '-',
+                                  style: const TextStyle(
+                                    fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
                                 ),
                               ],
                             ),
-                            CircleAvatar(
-                              radius: 22,
-                              backgroundColor: Colors.white.withOpacity(0.15),
-                              backgroundImage: (user.fotoProfil != null && user.fotoProfil!.isNotEmpty)
-                                  ? NetworkImage(user.fotoProfil!)
-                                  : null,
-                              child: (user.fotoProfil == null || user.fotoProfil!.isEmpty)
-                                  ? const Icon(Icons.person, color: Colors.white, size: 24)
-                                  : null,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.medical_services, color: Colors.white, size: 32),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Jadwal MCU Mendatang',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      userPendaftaran.isEmpty
-                                          ? 'Belum ada jadwal MCU'
-                                          : '${userPendaftaran.length} jadwal MCU',
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.8),
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  // Carousel Section
-                  SizedBox(
-                    height: isWebLayout ? 200 : 175,
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        PageView.builder(
-                          itemCount: _carouselImages.length,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _carouselIndex = index;
-                            });
-                          },
-                          itemBuilder: (context, index) {
-                            return ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: Image.asset(
-                                _carouselImages[index],
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                              ),
-                            );
-                          },
-                        ),
-                        Positioned(
-                          bottom: 12,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(_carouselImages.length, (index) {
-                              return Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 4),
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: _carouselIndex == index
-                                      ? const Color(0xFF1A237E)
-                                      : Colors.grey[300],
+                    // Carousel Section
+                    SizedBox(
+                      height: isWebLayout ? 300 : 250,
+                      child: Stack(
+                        children: [
+                          PageView.builder(
+                            itemCount: _carouselItems.length,
+                            onPageChanged: (index) {
+                              setState(() {
+                                _carouselIndex = index;
+                              });
+                            },
+                            itemBuilder: (context, index) {
+                              final item = _carouselItems[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      insetPadding: const EdgeInsets.all(16),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: Image.asset(
+                                          item['image'],
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        Image.asset(
+                                          item['image'],
+                                          fit: BoxFit.cover,
+                                        ),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Colors.transparent,
+                                                item['color'].withOpacity(0.8),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          left: 20,
+                                          right: 20,
+                                          bottom: 20,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                item['title'],
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.bold,
+                                                  shadows: [
+                                                    Shadow(
+                                                      offset: Offset(0, 2),
+                                                      blurRadius: 4,
+                                                      color: Colors.black26,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                item['description'],
+                                                style: TextStyle(
+                                                  color: Colors.white.withOpacity(0.9),
+                                                  fontSize: 16,
+                                                  shadows: const [
+                                                    Shadow(
+                                                      offset: Offset(0, 1),
+                                                      blurRadius: 2,
+                                                      color: Colors.black26,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               );
-                            }),
+                            },
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Menu Section
-                  Text(
-                    'Layanan MCU',
-                    style: TextStyle(
-                      fontSize: isWebLayout ? 24 : 20,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1A237E),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 100,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.only(bottom: 80),
-                      scrollDirection: Axis.horizontal,
-                      clipBehavior: Clip.hardEdge,
-                      itemCount: 4,
-                      itemBuilder: (context, index) {
-                        return _MenuCard(
-                          iconPath: 'assets/icons/darah.png',
-                          label: 'Hematologi',
-                          onTap: () => _showServiceDetails(
-                            context,
-                            'Hematologi',
-                            'assets/icons/darah.png',
-                            [
-                              'Hemoglobin',
-                              'Lekosit',
-                              'Trombosit',
-                              'Hematokrit',
-                              'Hitung Jenis',
-                              'LED',
-                              'Eritosit',
-                              'MC',
-                            ],
-                            deskripsi: 'Merupakan panel pemeriksaan yg terdiri dari Hemoglobin, Lekosit, Trombosit, Hematokrit, Hitung Jenis, LED, Eritosit, dan nilai-nilai MC. Pemeriksaan Hematologi merupakan pemeriksaan dasar yang digunakan secara luas mulai sebagai pemeriksaan penyaring, diagnosis maupun untuk mengikuti perkembangan penyakit; diantaranya penyakit infeksi, kelainan darah, penyakit degeneratif, dan lainnya. Spesimen Pemeriksaan: Darah dengan antikoagulan EDTA. Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
+                          Positioned(
+                            bottom: 16,
+                            left: 0,
+                            right: 0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(_carouselItems.length, (index) {
+                                return AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  width: _carouselIndex == index ? 24 : 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: _carouselIndex == index
+                                        ? const Color(0xFF1A237E)
+                                        : Colors.white.withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                );
+                              }),
+                            ),
                           ),
-                        );
-                      },
-                      separatorBuilder: (context, index) => const SizedBox(width: 16),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  // Upcoming MCU Section
-                  Text(
-                    'Jadwal MCU Mendatang',
-                    style: TextStyle(
-                      fontSize: isWebLayout ? 24 : 20,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1A237E),
+                    // Menu Section
+                    Text(
+                      'Layanan MCU',
+                      style: TextStyle(
+                        fontSize: isWebLayout ? 24 : 20,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1A237E),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildUpcomingMCUList(userPendaftaran),
-                ],
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 160,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 4,
+                        itemBuilder: (context, index) {
+                          final services = [
+                            {
+                              'icon': 'assets/icons/darah.png',
+                              'label': 'Hematologi',
+                              'services': [
+                                'Hemoglobin',
+                                'Lekosit',
+                                'Trombosit',
+                                'Hematokrit',
+                                'Hitung Jenis',
+                                'LED',
+                                'Eritosit',
+                                'MC',
+                              ],
+                              'deskripsi': 'Merupakan panel pemeriksaan yg terdiri dari Hemoglobin, Lekosit, Trombosit, Hematokrit, Hitung Jenis, LED, Eritosit, dan nilai-nilai MC. Pemeriksaan Hematologi merupakan pemeriksaan dasar yang digunakan secara luas mulai sebagai pemeriksaan penyaring, diagnosis maupun untuk mengikuti perkembangan penyakit; diantaranya penyakit infeksi, kelainan darah, penyakit degeneratif, dan lainnya. Spesimen Pemeriksaan: Darah dengan antikoagulan EDTA. Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
+                            },
+                            {
+                              'icon': 'assets/icons/usus.png',
+                              'label': 'Faeces',
+                              'services': [
+                                'Warna',
+                                'Kejernihan',
+                                'Berat Jenis',
+                                'pH',
+                                'Protein',
+                                'Glukosa',
+                                'Leukosit',
+                                'Eritrosit',
+                              ],
+                              'deskripsi': 'Fecal Calprotectin adalah protein dalam faeces yang dikeluarkan ketika terjadi proses peradangan di usus. Pemeriksaan Fecal Calprotectin pada umumnya digunakan untuk membantu diagnosa dan monitoring penyakit inflammatory bowel disease (IBD), disamping menilai diare kronik karena inflamasi. Kadar Calprotectin meningkat didapatkan pada penyakit IBD, seperti Crohn\'s Disease atau ulcerative colitis. Spesimen Pemeriksaan: Tidak ada. Persiapan Pemeriksaan: Tidak ada persiapan khusus',
+                            },
+                            {
+                              'icon': 'assets/icons/jantung.png',
+                              'label': 'Jantung',
+                              'services': [
+                                'EKG',
+                                'Treadmill',
+                                'Ekokardiografi',
+                                'Stress Test',
+                              ],
+                              'deskripsi': 'Troponin T adalah protein spesfik yang hanya ada di otot jantung. Pemeriksaan Troponin T digunakan untuk evaluasi dugaan adanya kelainan iskemi koroner akut, misalnya pada kasus nyeri dada. Dibanding dengan cardiac marker lainnya (misalnya CK-MB), pemeriksaan troponin lebih spesifik dan sensitif dalam medeteksi adanya kerusakan otot jantung. Spesimen Pemeriksaan: Darah. Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
+                            },
+                            {
+                              'icon': 'assets/icons/paruparu.png',
+                              'label': 'Paru',
+                              'services': [
+                                'Spirometri',
+                                'Rontgen Thorax',
+                                'CT Scan Thorax',
+                              ],
+                              'deskripsi': 'Interferon-Gamma Release Assays (IGRA) adalah pemeriksaan darah yang digunakan untuk membantu dalam diagnosis penyakit Tuberkulosis (TB) maupun Infeksi Laten Tuberkulosis (LTBI). Pemeriksaan ini mengukur respon imun seluler terhadap M. Tuberculosis (M. TBC). Hasil Test IGRA yang positip mengindikasikan adanya infeksi oleh kuman TBC. Spesimen Pemeriksaan: Darah (plasma). Persiapan Pemeriksaan: Tidak ada persiapan khusus.',
+                            },
+                          ];
+
+                          final service = services[index];
+                          return _MenuCard(
+                            iconPath: service['icon'] as String,
+                            label: service['label'] as String,
+                            onTap: () => _showServiceDetails(
+                              context,
+                              service['label'] as String,
+                              service['icon'] as String,
+                              service['services'] as List<String>,
+                              deskripsi: service['deskripsi'] as String,
+                            ),
+                          );
+                        },
+                        separatorBuilder: (context, index) => const SizedBox(width: 16),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Upcoming MCU Section
+                    Text(
+                      'Jadwal MCU Mendatang',
+                      style: TextStyle(
+                        fontSize: isWebLayout ? 24 : 20,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1A237E),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildUpcomingMCUList(userPendaftaran),
+                  ],
+                ),
               ),
             );
           },
@@ -564,46 +623,85 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
       itemBuilder: (context, index) {
         final pendaftaran = pendaftaranList[index];
         return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           elevation: 2,
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: CircleAvatar(
-              backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
-              child: Icon(
-                _getStatusIcon(pendaftaran.status),
-                color: _getStatusColor(pendaftaran.status),
-              ),
-            ),
-            title: Text(
-              pendaftaran.paketMcu.namaPaket,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text(
-                  'Tanggal: ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
-                  style: const TextStyle(fontSize: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Tanggal
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                DateFormat('dd MMM yyyy', 'id_ID').format(pendaftaran.tanggalPendaftaran),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Color(0xFF1A237E),
+                                ),
+                              ),
+                              Text(
+                                DateFormat('MMM', 'id_ID').format(pendaftaran.tanggalPendaftaran),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF1A237E),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Nama dan detail
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                pendaftaran.user.namaLengkap ?? '-',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                '${pendaftaran.paketMcu.namaPaket} - '
+                                '${pendaftaran.tanggalPendaftaran.hour.toString().padLeft(2, '0')}:${pendaftaran.tanggalPendaftaran.minute.toString().padLeft(2, '0')}',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Status
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(pendaftaran.status),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            pendaftaran.status,
+                            style: const TextStyle(color: Colors.white, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Harga: Rp ${NumberFormat('#,##0.00', 'id_ID').format(pendaftaran.paketMcu.harga)}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            trailing: _buildStatusChip(pendaftaran.status),
+              ),
+            ],
           ),
         );
       },
@@ -722,60 +820,55 @@ class _MenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          elevation: 3,
-          child: Container(
-            width: 180,
-            height: 60,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1A237E), Color(0xFF5B86E5), Color(0xFF36D1C4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
+    return Container(
+      width: 160,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1A237E), Color(0xFF5B86E5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1A237E).withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
-                  margin: const EdgeInsets.only(right: 14),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Image.asset(
                     iconPath,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.image_not_supported,
-                      size: 28,
-                      color: Colors.white,
-                    ),
+                    width: 48,
+                    height: 48,
+                    color: null,
                   ),
                 ),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.left,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 12),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),

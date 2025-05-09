@@ -13,10 +13,12 @@ import 'providers/user_provider.dart';
 import 'providers/pasien_provider.dart';
 import 'providers/paket_mcu_provider.dart';
 import 'providers/pendaftaran_provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+    await initializeDateFormatting('id_ID', null);
 
     // Setup logging
     Logger.root.level = Level.ALL;

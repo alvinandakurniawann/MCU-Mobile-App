@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user.dart';
+import 'dart:async';
 
 class PasienAdminScreen extends StatefulWidget {
   const PasienAdminScreen({Key? key}) : super(key: key);
@@ -13,6 +14,7 @@ class PasienAdminScreen extends StatefulWidget {
 class _PasienAdminScreenState extends State<PasienAdminScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -25,7 +27,25 @@ class _PasienAdminScreenState extends State<PasienAdminScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _searchQuery = query;
+      });
+    });
+  }
+
+  List<User> _filterUsers(List<User> users) {
+    if (_searchQuery.isEmpty) return users;
+    final searchLower = _searchQuery.toLowerCase();
+    return users.where((user) {
+      return user.namaLengkap?.toLowerCase()?.contains(searchLower) ?? false;
+    }).toList();
   }
 
   @override
@@ -42,7 +62,7 @@ class _PasienAdminScreenState extends State<PasienAdminScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Cari pasien berdasarkan nama atau No. KTP',
+                hintText: 'Cari pasien berdasarkan nama, No. KTP, atau email',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -59,11 +79,7 @@ class _PasienAdminScreenState extends State<PasienAdminScreen> {
                       )
                     : null,
               ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+              onChanged: _onSearchChanged,
             ),
           ),
           Expanded(
@@ -81,15 +97,31 @@ class _PasienAdminScreenState extends State<PasienAdminScreen> {
                   );
                 }
 
-                final filteredUsers = provider.userList.where((user) {
-                  final searchLower = _searchQuery.toLowerCase();
-                  return user.namaLengkap.toLowerCase().contains(searchLower) ||
-                      user.noKtp.toLowerCase().contains(searchLower);
-                }).toList();
+                final filteredUsers = _filterUsers(provider.userList);
 
                 if (filteredUsers.isEmpty) {
-                  return const Center(
-                    child: Text('Tidak ada data pasien'),
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'Tidak ada data pasien'
+                              : 'Tidak ada pasien yang ditemukan untuk pencarian "$_searchQuery"',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 }
 
@@ -99,18 +131,37 @@ class _PasienAdminScreenState extends State<PasienAdminScreen> {
                   itemBuilder: (context, index) {
                     final user = filteredUsers[index];
                     return Card(
+                      elevation: 2,
+                      margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
-                        title: Text(user.namaLengkap),
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.blue.withOpacity(0.1),
+                          child: Text(
+                            (user.namaLengkap != null && user.namaLengkap!.isNotEmpty)
+                                ? user.namaLengkap![0].toUpperCase()
+                                : '-',
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          user.namaLengkap ?? '-',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('No. KTP: ${user.noKtp}'),
-                            Text('Jenis Kelamin: ${user.jenisKelamin}'),
+                            Text('No. KTP: ${user.noKtp ?? '-'}'),
+                            Text('Jenis Kelamin: ${user.jenisKelamin ?? '-'}'),
                             Text(
-                                'TTL: ${user.tempatLahir}, ${user.tanggalLahir.toString().split(' ')[0]}'),
-                            Text('No. HP: ${user.noHandphone}'),
+                                'TTL: ${user.tempatLahir ?? '-'}, ${user.tanggalLahir?.toString().split(' ')[0] ?? '-'}'),
+                            Text('No. HP: ${user.noHandphone ?? '-'}'),
                             if (user.email != null && user.email!.isNotEmpty)
-                              Text('Email: ${user.email}'),
+                              Text('Email: ${user.email ?? '-'}'),
                           ],
                         ),
                         trailing: IconButton(
@@ -140,18 +191,18 @@ class _PasienAdminScreenState extends State<PasienAdminScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDetailItem('Nama Lengkap', user.namaLengkap),
-              _buildDetailItem('No. KTP', user.noKtp),
-              _buildDetailItem('Jenis Kelamin', user.jenisKelamin),
-              _buildDetailItem('Tempat Lahir', user.tempatLahir),
+              _buildDetailItem('Nama Lengkap', user.namaLengkap ?? '-'),
+              _buildDetailItem('No. KTP', user.noKtp ?? '-'),
+              _buildDetailItem('Jenis Kelamin', user.jenisKelamin ?? '-'),
+              _buildDetailItem('Tempat Lahir', user.tempatLahir ?? '-'),
               _buildDetailItem(
-                  'Tanggal Lahir', user.tanggalLahir.toString().split(' ')[0]),
-              _buildDetailItem('Alamat', user.alamat),
-              _buildDetailItem('No. Handphone', user.noHandphone),
+                  'Tanggal Lahir', user.tanggalLahir?.toString().split(' ')[0] ?? '-'),
+              _buildDetailItem('Alamat', user.alamat ?? '-'),
+              _buildDetailItem('No. Handphone', user.noHandphone ?? '-'),
               if (user.email != null && user.email!.isNotEmpty)
-                _buildDetailItem('Email', user.email!),
+                _buildDetailItem('Email', user.email ?? '-'),
               _buildDetailItem(
-                  'Terdaftar Sejak', user.createdAt.toString().split(' ')[0]),
+                  'Terdaftar Sejak', user.createdAt?.toString().split(' ')[0] ?? '-'),
             ],
           ),
         ),

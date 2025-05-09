@@ -7,6 +7,9 @@ import '../../providers/paket_mcu_provider.dart';
 import 'jadwal_admin_screen.dart';
 import 'paket_mcu_admin_screen.dart';
 import 'pasien_admin_screen.dart';
+import '../../providers/user_provider.dart';
+import '../../models/user.dart';
+import '../../models/paket_mcu.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -18,6 +21,13 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
   bool _isLoading = true;
+  String _searchQuery = '';
+  final TextEditingController _searchPasienController = TextEditingController();
+  String _searchPasienQuery = '';
+  User? _selectedUser;
+  PaketMCU? _selectedPaket;
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
 
   @override
   void initState() {
@@ -27,6 +37,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (!mounted) return;
       await _loadData();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchPasienController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -98,7 +114,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      _buildNavItem(Icons.dashboard, 'Dashboard', 0),
+                      _buildNavItem(Icons.dashboard, 'Beranda', 0),
                       _buildNavItem(Icons.medical_services, 'Paket MCU', 1),
                       _buildNavItem(Icons.people, 'Pasien', 2),
                       _buildNavItem(Icons.schedule, 'Jadwal', 3),
@@ -179,55 +195,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Expanded(
                 child: _buildSelectedScreen(),
               ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: BottomNavigationBar(
-                  currentIndex: _selectedIndex,
-                  onTap: (index) {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                  },
-                  type: BottomNavigationBarType.fixed,
-                  backgroundColor: Colors.white,
-                  selectedItemColor: const Color(0xFF1A237E),
-                  unselectedItemColor: Colors.grey,
-                  items: const [
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.dashboard),
-                      label: 'Dashboard',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.medical_services),
-                      label: 'Paket MCU',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.people),
-                      label: 'Pasien',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.schedule),
-                      label: 'Jadwal',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.bar_chart),
-                      label: 'Laporan',
-                    ),
-                  ],
-                ),
-              ),
             ],
           );
         },
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF1A237E),
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Beranda',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.medical_services),
+            label: 'Paket MCU',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Pasien',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.schedule),
+            label: 'Jadwal',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: 'Laporan',
+          ),
+        ],
       ),
     );
   }
@@ -280,7 +284,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case 2:
         return _buildPasienContent();
       case 3:
-        return _buildJadwalContent();
+        return JadwalAdminScreen();
       case 4:
         return _buildLaporanContent();
       default:
@@ -311,15 +315,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             .where((p) => p.status.toLowerCase() == 'pending')
             .length;
         final completedPendaftaran = pendaftaranProvider.pendaftaranList
-            .where((p) => p.status.toLowerCase() == 'completed')
+            .where((p) => p.status.toLowerCase() == 'completed' || p.status.toLowerCase() == 'cancelled')
             .length;
 
         return LayoutBuilder(
           builder: (context, constraints) {
             final isWebLayout = constraints.maxWidth > 600;
             final crossAxisCount = isWebLayout ? 4 : 2;
-            final childAspectRatio = isWebLayout ? 1.5 : 1.3;
-            final padding = isWebLayout ? 24.0 : 16.0;
+            final childAspectRatio = isWebLayout ? 1.2 : 1.0;
+            final padding = isWebLayout ? 20.0 : 12.0;
 
             return SingleChildScrollView(
               padding: EdgeInsets.all(padding),
@@ -334,10 +338,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       color: const Color(0xFF1A237E),
                     ),
                   ),
-                  SizedBox(height: isWebLayout ? 24 : 16),
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(top: 4),
                     crossAxisCount: crossAxisCount,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
@@ -390,50 +394,484 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
+    return InkWell(
+      onTap: () {
+        switch (title) {
+          case 'Total Pendaftaran':
+            _showRegistrationList(context);
+            break;
+          case 'Menunggu':
+            _showFilteredRegistrationList(context, 'pending');
+            break;
+          case 'Selesai':
+            _showFilteredRegistrationList(context, 'completed');
+            break;
+          case 'Total Paket':
+            _showPaketList(context);
+            break;
+        }
+      },
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [
-              color.withOpacity(0.1),
-              color.withOpacity(0.05),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 32,
-                color: color,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              colors: [
+                color.withOpacity(0.1),
+                color.withOpacity(0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 32,
                   color: color,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: color.withOpacity(0.8),
+                const SizedBox(height: 8),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
                 ),
-                textAlign: TextAlign.center,
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: color.withOpacity(0.8),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showRegistrationList(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).size.height * 0.8,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Daftar Pendaftaran',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: Consumer<PendaftaranProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (provider.pendaftaranList.isEmpty) {
+                      return const Center(
+                        child: Text('Belum ada pendaftaran'),
+                      );
+                    }
+
+                    return ListView.separated(
+                      itemCount: provider.pendaftaranList.length,
+                      separatorBuilder: (context, index) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final pendaftaran = provider.pendaftaranList[index];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
+                            child: Icon(
+                              _getStatusIcon(pendaftaran.status),
+                              color: _getStatusColor(pendaftaran.status),
+                            ),
+                          ),
+                          title: Text(
+                            pendaftaran.user.namaLengkap ?? '-',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(pendaftaran.paketMcu.namaPaket),
+                              Text(
+                                'Tanggal: ${DateFormat('dd MMM yyyy HH:mm').format(pendaftaran.tanggalPendaftaran)}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(pendaftaran.status),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              pendaftaran.status,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFilteredRegistrationList(BuildContext context, String status) {
+    String title;
+    switch (status) {
+      case 'pending':
+        title = 'Daftar Pendaftaran Menunggu';
+        break;
+      case 'completed':
+        title = 'Daftar Pendaftaran Selesai';
+        break;
+      default:
+        title = 'Daftar Pendaftaran';
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).size.height * 0.8,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: Consumer<PendaftaranProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final filteredList = provider.pendaftaranList
+                        .where((p) =>
+                          status == 'completed'
+                            ? (p.status.toLowerCase() == 'completed' || p.status.toLowerCase() == 'cancelled')
+                            : p.status.toLowerCase() == status.toLowerCase()
+                        )
+                        .toList();
+
+                    if (filteredList.isEmpty) {
+                      return Center(
+                        child: Text('Belum ada pendaftaran ${status.toLowerCase()}'),
+                      );
+                    }
+
+                    return ListView.separated(
+                      itemCount: filteredList.length,
+                      separatorBuilder: (context, index) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final pendaftaran = filteredList[index];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
+                            child: Icon(
+                              _getStatusIcon(pendaftaran.status),
+                              color: _getStatusColor(pendaftaran.status),
+                            ),
+                          ),
+                          title: Text(
+                            pendaftaran.user.namaLengkap ?? '-',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(pendaftaran.paketMcu.namaPaket),
+                              Text(
+                                'Tanggal: ${DateFormat('dd MMM yyyy HH:mm').format(pendaftaran.tanggalPendaftaran)}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          trailing: (status == 'pending')
+                              ? PopupMenuButton<String>(
+                                  onSelected: (String newStatus) async {
+                                    if (newStatus != pendaftaran.status) {
+                                      await _updateStatus(pendaftaran.id, newStatus);
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'completed',
+                                      child: Row(
+                                        children: const [
+                                          Icon(Icons.check_circle, color: Colors.green),
+                                          SizedBox(width: 8),
+                                          Text('Completed'),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'cancelled',
+                                      child: Row(
+                                        children: const [
+                                          Icon(Icons.cancel, color: Colors.red),
+                                          SizedBox(width: 8),
+                                          Text('Cancelled'),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(pendaftaran.status),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          pendaftaran.status,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              : (status == 'completed' || pendaftaran.status.toLowerCase() == 'cancelled')
+                                  ? PopupMenuButton<String>(
+                                      onSelected: (String newStatus) async {
+                                        if (newStatus != pendaftaran.status) {
+                                          await _updateStatus(pendaftaran.id, newStatus);
+                                          Navigator.pop(context);
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        PopupMenuItem(
+                                          value: 'pending',
+                                          child: Row(
+                                            children: const [
+                                              Icon(Icons.pending, color: Colors.orange),
+                                              SizedBox(width: 8),
+                                              Text('Pending'),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: _getStatusColor(pendaftaran.status),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              pendaftaran.status,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  : Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: _getStatusColor(pendaftaran.status),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        pendaftaran.status,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPaketList(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).size.height * 0.8,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Daftar Paket MCU',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: Consumer<PaketMCUProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (provider.paketList.isEmpty) {
+                      return const Center(
+                        child: Text('Belum ada paket MCU'),
+                      );
+                    }
+
+                    return ListView.separated(
+                      itemCount: provider.paketList.length,
+                      separatorBuilder: (context, index) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final paket = provider.paketList[index];
+                        return ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1A237E).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.medical_services,
+                              color: Color(0xFF1A237E),
+                            ),
+                          ),
+                          title: Text(
+                            paket.namaPaket,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Rp ${NumberFormat('#,##0.00', 'id_ID').format(paket.harga)}',
+                                style: const TextStyle(
+                                  color: Color(0xFF1A237E),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                paket.deskripsi,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -492,7 +930,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             title: Text(
-              pendaftaran.user.namaLengkap,
+              pendaftaran.user.namaLengkap ?? '-',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
               ),
@@ -500,18 +938,72 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             subtitle: Text(
               '${pendaftaran.paketMcu.namaPaket} - ${DateFormat('dd MMM yyyy').format(pendaftaran.tanggalPendaftaran)}',
             ),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _getStatusColor(pendaftaran.status).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
+            trailing: PopupMenuButton<String>(
+              onSelected: (String newStatus) async {
+                if (newStatus != pendaftaran.status) {
+                  await _updateStatus(pendaftaran.id, newStatus);
+                }
+              },
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                pendaftaran.status,
-                style: TextStyle(
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'pending',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.pending, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Text('Pending'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'completed',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.check_circle, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text('Completed'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'cancelled',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.cancel, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Canceled'),
+                    ],
+                  ),
+                ),
+              ],
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
                   color: _getStatusColor(pendaftaran.status),
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      pendaftaran.status,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.arrow_drop_down,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -560,170 +1052,204 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           );
         }
 
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isWebLayout = constraints.maxWidth > 600;
+            final padding = isWebLayout ? 24.0 : 16.0;
+
+            return Padding(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Paket MCU',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1A237E),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Paket MCU',
+                        style: TextStyle(
+                          fontSize: isWebLayout ? 28 : 24,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1A237E),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          _showPaketForm(context, provider);
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Tambah Paket'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1A237E),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      _showPaketForm(context, provider);
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('Tambah Paket'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A237E),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: provider.paketList.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        final paket = provider.paketList[index];
+                        return Card(
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white,
+                                  const Color(0xFF1A237E).withOpacity(0.08),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              border: Border.all(
+                                color: const Color(0xFF1A237E).withOpacity(0.1),
+                                width: 1,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              paket.namaPaket,
+                                              style: const TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF1A237E),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF1A237E).withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: const Color(0xFF1A237E).withOpacity(0.2),
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                'Rp ${NumberFormat('#,##0.00', 'id_ID').format(paket.harga)}',
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  color: Color(0xFF1A237E),
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF1A237E).withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: IconButton(
+                                              icon: const Icon(Icons.edit, color: Color(0xFF1A237E), size: 20),
+                                              onPressed: () {
+                                                _showPaketForm(context, provider, paket: paket);
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFE57373).withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: IconButton(
+                                              icon: const Icon(Icons.delete, color: Color(0xFFE57373), size: 20),
+                                              onPressed: () async {
+                                                final confirm = await showDialog<bool>(
+                                                  context: context,
+                                                  builder: (context) => AlertDialog(
+                                                    title: const Text('Konfirmasi'),
+                                                    content: const Text('Apakah Anda yakin ingin menghapus paket ini?'),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () => Navigator.pop(context, false),
+                                                        child: const Text('Batal'),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () => Navigator.pop(context, true),
+                                                        child: const Text('Hapus', style: TextStyle(color: Color(0xFFE57373))),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                                if (confirm == true) {
+                                                  final success = await provider.deletePaketMCU(paket.id);
+                                                  if (success && context.mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text('Paket berhasil dihapus'),
+                                                        backgroundColor: Color(0xFF1A237E),
+                                                      ),
+                                                    );
+                                                  } else if (context.mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(provider.error ?? 'Gagal menghapus paket'),
+                                                        backgroundColor: const Color(0xFFE57373),
+                                                      ),
+                                                    );
+                                                  }
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    paket.deskripsi,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: const Color(0xFF1A237E).withOpacity(0.9),
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 1.5,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                  ),
-                  itemCount: provider.paketList.length,
-                  itemBuilder: (context, index) {
-                    final paket = provider.paketList[index];
-                    return Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFF1A237E).withOpacity(0.1),
-                              const Color(0xFF1A237E).withOpacity(0.05),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      paket.namaPaket,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1A237E),
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit, color: Color(0xFF1A237E)),
-                                    onPressed: () {
-                                      _showPaketForm(context, provider, paket: paket);
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () async {
-                                      final confirm = await showDialog<bool>(
-                                        context: context,
-                                        builder: (context) => AlertDialog(
-                                          title: const Text('Konfirmasi'),
-                                          content: const Text('Apakah Anda yakin ingin menghapus paket ini?'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(context, false),
-                                              child: const Text('Batal'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(context, true),
-                                              child: const Text('Hapus', style: TextStyle(color: Colors.red)),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                      if (confirm == true) {
-                                        final success = await provider.deletePaketMCU(paket.id);
-                                        if (success && context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Paket berhasil dihapus'),
-                                              backgroundColor: Colors.green,
-                                            ),
-                                          );
-                                        } else if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text(provider.error ?? 'Gagal menghapus paket'),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Rp ${NumberFormat('#,##0.00', 'id_ID').format(paket.harga)}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Expanded(
-                                child: Text(
-                                  paket.deskripsi,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -889,6 +1415,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           );
         }
 
+        // Filter data pasien berdasarkan nama
+        final filteredList = _searchPasienQuery.isEmpty
+            ? provider.pendaftaranList
+            : provider.pendaftaranList.where((pendaftaran) =>
+                pendaftaran.user.namaLengkap?.toLowerCase().contains(_searchPasienQuery.toLowerCase()) ?? false
+              ).toList();
+
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -912,8 +1445,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   child: Column(
                     children: [
                       TextField(
+                        controller: _searchPasienController,
                         decoration: InputDecoration(
-                          hintText: 'Cari pasien...',
+                          hintText: 'Cari pasien berdasarkan nama...',
                           prefixIcon: const Icon(Icons.search),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -926,7 +1460,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(color: Colors.blue),
                           ),
+                          suffixIcon: _searchPasienQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchPasienController.clear();
+                                    setState(() {
+                                      _searchPasienQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
                         ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchPasienQuery = value;
+                          });
+                        },
                       ),
                     ],
                   ),
@@ -939,170 +1489,60 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: provider.pendaftaranList.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final pendaftaran = provider.pendaftaranList[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.blue.withOpacity(0.1),
-                          child: Text(
-                            pendaftaran.user.namaLengkap[0].toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          pendaftaran.user.namaLengkap,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(pendaftaran.user.email ?? 'No email'),
-                            Text(
-                              'Paket: ${pendaftaran.paketMcu.namaPaket}',
-                              style: const TextStyle(
-                                color: Colors.grey,
+                  child: filteredList.isEmpty
+                      ? const Center(
+                          child: Text('Tidak ada pasien yang ditemukan'),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: filteredList.length,
+                          separatorBuilder: (context, index) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final pendaftaran = filteredList[index];
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.blue.withOpacity(0.1),
+                                child: Text(
+                                  (pendaftaran.user.namaLengkap != null && pendaftaran.user.namaLengkap!.isNotEmpty)
+                                      ? pendaftaran.user.namaLengkap![0].toUpperCase()
+                                      : '-',
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        trailing: Chip(
-                          label: Text(
-                            pendaftaran.status,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                          backgroundColor: _getStatusColor(pendaftaran.status),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildJadwalContent() {
-    return Consumer<PendaftaranProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Jadwal MCU',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      // TODO: Implement add new schedule
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('Tambah Jadwal'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: provider.pendaftaranList.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final pendaftaran = provider.pendaftaranList[index];
-                      return ListTile(
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                pendaftaran.tanggalPendaftaran.day.toString(),
+                              title: Text(
+                                pendaftaran.user.namaLengkap ?? '-',
                                 style: const TextStyle(
-                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
                                 ),
                               ),
-                              Text(
-                                _getMonthName(pendaftaran.tanggalPendaftaran.month),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.blue,
-                                ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(pendaftaran.user.email ?? 'No email'),
+                                  Text(
+                                    'Paket: ${pendaftaran.paketMcu.namaPaket}',
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                              trailing: Chip(
+                                label: Text(
+                                  pendaftaran.status,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                backgroundColor: _getStatusColor(pendaftaran.status),
+                              ),
+                            );
+                          },
                         ),
-                        title: Text(
-                          pendaftaran.user.namaLengkap,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.hour}:${pendaftaran.tanggalPendaftaran.minute.toString().padLeft(2, '0')}',
-                        ),
-                        trailing: Chip(
-                          label: Text(
-                            pendaftaran.status,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                          backgroundColor: _getStatusColor(pendaftaran.status),
-                        ),
-                      );
-                    },
-                  ),
                 ),
               ),
             ],
@@ -1116,132 +1556,451 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Consumer<PendaftaranProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         final totalPendaftaran = provider.pendaftaranList.length;
-        final totalPendapatan = provider.pendaftaranList.fold(
-          0.0,
-          (sum, item) => sum + item.totalHarga,
-        );
         final completedPendaftaran = provider.pendaftaranList
+            .where((p) => p.status.toLowerCase() == 'completed' || p.status.toLowerCase() == 'cancelled')
+            .toList();
+        final totalPendapatan = completedPendaftaran
             .where((p) => p.status.toLowerCase() == 'completed')
-            .length;
+            .fold(0.0, (sum, item) => sum + item.totalHarga);
 
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Laporan MCU',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 24),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 3,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.5,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildStatCard(
-                    'Total Pendaftaran',
-                    totalPendaftaran.toString(),
-                    Icons.assignment,
-                    Colors.blue,
+                  const Text(
+                    'Laporan MCU',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  _buildStatCard(
-                    'Total Pendapatan',
-                    'Rp ${NumberFormat('#,##0.00', 'id_ID').format(totalPendapatan)}',
-                    Icons.currency_exchange,
-                    Colors.green,
+                  const SizedBox(height: 24),
+                  // Baris 1: Total Pendaftaran & MCU Selesai
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _showPendaftaranDetails(context, provider),
+                          child: _niceStatCard(
+                            icon: Icons.assignment,
+                            value: totalPendaftaran.toString(),
+                            label: 'Total Pendaftaran',
+                            color: Colors.blue,
+                            bgColor: Colors.blue.shade50,
+                            isRect: false,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _showCompletedMCUDetails(context, provider),
+                          child: _niceStatCard(
+                            icon: Icons.check_circle,
+                            value: completedPendaftaran.length.toString(),
+                            label: 'MCU Selesai & Dibatalkan',
+                            color: Colors.purple,
+                            bgColor: Colors.purple.shade50,
+                            isRect: false,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  _buildStatCard(
-                    'MCU Selesai',
-                    completedPendaftaran.toString(),
-                    Icons.check_circle,
-                    Colors.purple,
+                  const SizedBox(height: 16),
+                  // Baris 2: Total Pendapatan (persegi panjang, full width)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _showPendapatanDetails(context, provider),
+                          child: _niceStatCard(
+                            icon: Icons.currency_exchange,
+                            value: 'Rp ${NumberFormat('#,##0.00', 'id_ID').format(totalPendapatan)}',
+                            label: 'Total Pendapatan',
+                            color: Colors.green,
+                            bgColor: Colors.green.shade50,
+                            isRect: true,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Riwayat Pendaftaran',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: provider.pendaftaranList.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: Center(
+                              child: Text(
+                                'Belum ada pendaftaran',
+                                style: TextStyle(fontSize: 16, color: Colors.grey),
+                              ),
+                            ),
+                          )
+                        : SizedBox(
+                            height: 350,
+                            child: ListView.separated(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: provider.pendaftaranList.length,
+                              separatorBuilder: (context, index) => const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final pendaftaran = provider.pendaftaranList[index];
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
+                                    child: Icon(
+                                      _getStatusIcon(pendaftaran.status),
+                                      color: _getStatusColor(pendaftaran.status),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    pendaftaran.user.namaLengkap ?? '-',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Text(
+                                    '${pendaftaran.paketMcu.namaPaket} - ${DateFormat('dd MMM yyyy').format(pendaftaran.tanggalPendaftaran)}',
+                                  ),
+                                  trailing: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: _getStatusColor(pendaftaran.status),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        pendaftaran.status,
+                                        style: const TextStyle(fontSize: 12, color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
-              const Text(
-                'Riwayat Pendaftaran',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showPendaftaranDetails(BuildContext context, PendaftaranProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                'Detail Total Pendaftaran',
+                style: const TextStyle(fontSize: 20),
               ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: provider.pendaftaranList.length,
+            itemBuilder: (context, index) {
+              final pendaftaran = provider.pendaftaranList[index];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  child: Text(
+                    (pendaftaran.user.namaLengkap != null && pendaftaran.user.namaLengkap!.isNotEmpty)
+                        ? pendaftaran.user.namaLengkap![0].toUpperCase()
+                        : '-',
+                    style: const TextStyle(color: Colors.blue),
                   ),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: provider.pendaftaranList.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final pendaftaran = provider.pendaftaranList[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: _getStatusColor(pendaftaran.status).withOpacity(0.1),
-                          child: Icon(
-                            _getStatusIcon(pendaftaran.status),
-                            color: _getStatusColor(pendaftaran.status),
-                          ),
+                ),
+                title: Text(pendaftaran.user.namaLengkap ?? '-'),
+                subtitle: Text(
+                  '${pendaftaran.paketMcu.namaPaket}\n${DateFormat('dd MMM yyyy').format(pendaftaran.tanggalPendaftaran)}',
+                ),
+                trailing: Chip(
+                  label: Text(
+                    pendaftaran.status,
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  backgroundColor: _getStatusColor(pendaftaran.status),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showCompletedMCUDetails(BuildContext context, PendaftaranProvider provider) {
+    final completedPendaftaran = provider.pendaftaranList
+        .where((p) => p.status.toLowerCase() == 'completed' || p.status.toLowerCase() == 'cancelled')
+        .toList();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                'Detail MCU Selesai & Dibatalkan',
+                style: const TextStyle(fontSize: 20),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: completedPendaftaran.isEmpty
+              ? const Center(
+                  child: Text('Belum ada MCU yang selesai atau dibatalkan'),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: completedPendaftaran.length,
+                  itemBuilder: (context, index) {
+                    final pendaftaran = completedPendaftaran[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: pendaftaran.status.toLowerCase() == 'completed'
+                            ? Colors.purple.withOpacity(0.1)
+                            : Colors.red.withOpacity(0.1),
+                        child: Icon(
+                          pendaftaran.status.toLowerCase() == 'completed'
+                              ? Icons.check_circle
+                              : Icons.cancel,
+                          color: pendaftaran.status.toLowerCase() == 'completed'
+                              ? Colors.purple
+                              : Colors.red,
                         ),
-                        title: Text(
-                          pendaftaran.user.namaLengkap,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${pendaftaran.paketMcu.namaPaket} - ${pendaftaran.tanggalPendaftaran.toString().split(' ')[0]}',
-                        ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
+                      ),
+                      title: Text(pendaftaran.user.namaLengkap ?? '-'),
+                      subtitle: Text(
+                        '${pendaftaran.paketMcu.namaPaket}\n${DateFormat('dd MMM yyyy').format(pendaftaran.tanggalPendaftaran)}',
+                      ),
+                      trailing: pendaftaran.status.toLowerCase() == 'completed'
+                          ? Text(
                               'Rp ${NumberFormat('#,##0.00', 'id_ID').format(pendaftaran.totalHarga)}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green,
+                                color: Colors.purple,
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Chip(
-                              label: Text(
-                                pendaftaran.status,
-                                style: const TextStyle(
+                            )
+                          : Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'Dibatalkan',
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
                                 ),
                               ),
-                              backgroundColor: _getStatusColor(pendaftaran.status),
                             ),
-                          ],
+                    );
+                  },
+                ),
+        ),
+      ),
+    );
+  }
+
+  void _showPendapatanDetails(BuildContext context, PendaftaranProvider provider) {
+    final completedPendaftaran = provider.pendaftaranList
+        .where((p) => p.status.toLowerCase() == 'completed')
+        .toList();
+    
+    final pendapatanPerPaket = <String, double>{};
+    for (var pendaftaran in completedPendaftaran) {
+      final paketName = pendaftaran.paketMcu.namaPaket;
+      pendapatanPerPaket[paketName] = (pendapatanPerPaket[paketName] ?? 0) + pendaftaran.totalHarga;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                'Detail Pendapatan (MCU Selesai)',
+                style: const TextStyle(fontSize: 20),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Pendapatan per Paket MCU:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (pendapatanPerPaket.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'Belum ada pendapatan dari MCU yang selesai',
+                      style: TextStyle(color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                )
+              else
+                ...pendapatanPerPaket.entries.map(
+                  (entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            entry.key,
+                            style: const TextStyle(fontSize: 14),
+                          ),
                         ),
-                      );
-                    },
+                        Text(
+                          'Rp ${NumberFormat('#,##0.00', 'id_ID').format(entry.value)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+              const Divider(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Total Pendapatan:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    'Rp ${NumberFormat('#,##0.00', 'id_ID').format(pendapatanPerPaket.values.fold(0.0, (sum, value) => sum + value))}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  Widget _niceStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+    required Color bgColor,
+    bool isRect = false,
+  }) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      color: bgColor,
+      child: Padding(
+        padding: isRect
+            ? const EdgeInsets.symmetric(vertical: 28, horizontal: 24)
+            : const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: isRect ? 44 : 36),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: isRect ? 28 : 22,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                color: color.withOpacity(0.8),
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1251,5 +2010,45 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
     ];
     return months[month - 1];
+  }
+
+  Future<void> _updateStatus(String id, String newStatus) async {
+    try {
+      final success = await context.read<PendaftaranProvider>().updatePendaftaran(
+        id,
+        {'status': newStatus},
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        // Reload data pendaftaran untuk memperbarui tampilan
+        await context.read<PendaftaranProvider>().loadPendaftaranList();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Status berhasil diperbarui'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.read<PendaftaranProvider>().error ?? 'Gagal memperbarui status',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

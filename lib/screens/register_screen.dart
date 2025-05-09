@@ -64,7 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         email: _emailController.text,
         namaLengkap: _namaLengkapController.text,
         alamat: '', // Will be filled in profile edit
-        noKtp: '', // Will be filled in profile edit
+        noKtp: null, // Kirim null, bukan string kosong
         jenisKelamin: 'L', // Default value
         tempatLahir: '', // Will be filled in profile edit
         tanggalLahir: DateTime.now().toIso8601String(), // Default value

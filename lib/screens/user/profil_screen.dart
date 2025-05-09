@@ -5,6 +5,7 @@ import '../../providers/user_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
@@ -14,8 +15,18 @@ class ProfilScreen extends StatefulWidget {
 }
 
 class _ProfilScreenState extends State<ProfilScreen> {
-  File? _imageFile;
   bool _isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.currentUser != null) {
+        await userProvider.loadCurrentUser(userProvider.currentUser!.username ?? '');
+      }
+    });
+  }
 
   Future<void> _pickImage() async {
     try {
@@ -30,27 +41,41 @@ class _ProfilScreenState extends State<ProfilScreen> {
         });
 
         final file = File(result.files.single.path!);
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${result.files.single.name}';
-        
-        // Upload file ke Supabase Storage
         final supabase = Supabase.instance.client;
+        final userId = supabase.auth.currentUser?.id;
+
+        if (userId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User belum login!')),
+          );
+          setState(() {
+            _isUploading = false;
+          });
+          return;
+        }
+
+        final fileName = '$userId/${DateTime.now().millisecondsSinceEpoch}_${result.files.single.name}';
+        final bucket = dotenv.env['SUPABASE_BUCKET'] ?? 'profile-pictures';
+
         final response = await supabase.storage
-            .from('profile_photos')
+            .from(bucket)
             .upload(fileName, file);
 
-        // Dapatkan URL publik
-        final imageUrl = supabase.storage
-            .from('profile_photos')
-            .getPublicUrl(fileName);
+        if (response == null || response.isEmpty) {
+          throw 'Gagal upload file ke storage';
+        }
 
-        // Update foto profil di database
+        final imageUrl = supabase.storage
+            .from(bucket)
+            .getPublicUrl(fileName);
+        print('URL foto upload: ' + imageUrl);
+
         final userProvider = context.read<UserProvider>();
         final success = await userProvider.updateProfilePhoto(imageUrl);
 
         if (success) {
-          setState(() {
-            _imageFile = file;
-          });
+          await userProvider.loadCurrentUser(userProvider.currentUser?.username ?? '');
+          print('User setelah refresh: ' + (userProvider.currentUser?.fotoProfil ?? 'null'));
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Foto profil berhasil diperbarui')),
           );
@@ -100,20 +125,25 @@ class _ProfilScreenState extends State<ProfilScreen> {
                         Stack(
                           alignment: Alignment.bottomRight,
                           children: [
-                            CircleAvatar(
-                              radius: 48,
-                              backgroundColor: Colors.white,
-                              backgroundImage: _imageFile != null
-                                  ? FileImage(_imageFile!)
-                                  : (user.fotoProfil != null && user.fotoProfil!.isNotEmpty
-                                      ? NetworkImage(user.fotoProfil!) as ImageProvider
-                                      : null),
-                              child: _isUploading
-                                  ? const CircularProgressIndicator()
-                                  : (user.fotoProfil == null || user.fotoProfil!.isEmpty) && _imageFile == null
-                                      ? const Icon(Icons.person, size: 60, color: Color(0xFF1A237E))
-                                      : null,
-                            ),
+                            (user.fotoProfil != null && user.fotoProfil!.isNotEmpty)
+                                ? CircleAvatar(
+                                    radius: 48,
+                                    backgroundColor: Colors.white,
+                                    backgroundImage: NetworkImage(user.fotoProfil!),
+                                    onBackgroundImageError: (exception, stackTrace) {
+                                      print('Error loading image: ' + exception.toString());
+                                    },
+                                    child: _isUploading
+                                        ? const CircularProgressIndicator()
+                                        : null,
+                                  )
+                                : CircleAvatar(
+                                    radius: 48,
+                                    backgroundColor: Colors.white,
+                                    child: _isUploading
+                                        ? const CircularProgressIndicator()
+                                        : const Icon(Icons.person, size: 60, color: Color(0xFF1A237E)),
+                                  ),
                             Positioned(
                               bottom: 0,
                               right: 0,
@@ -134,7 +164,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          user.namaLengkap,
+                          user.namaLengkap ?? '-',
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -143,7 +173,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          user.username,
+                          user.username ?? '-',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.white.withOpacity(0.8),
@@ -161,23 +191,23 @@ class _ProfilScreenState extends State<ProfilScreen> {
                         padding: const EdgeInsets.all(20.0),
                         child: Column(
                           children: [
-                            _biodataRow(Icons.credit_card, 'No. KTP', user.noKtp),
+                            _biodataRow(Icons.credit_card, 'No. KTP', user.noKtp ?? '-'),
                             const Divider(),
-                            _biodataRow(Icons.person, 'Nama Lengkap', user.namaLengkap),
+                            _biodataRow(Icons.person, 'Nama Lengkap', user.namaLengkap ?? '-'),
                             const Divider(),
-                            _biodataRow(Icons.location_city, 'Tempat Lahir', user.tempatLahir),
+                            _biodataRow(Icons.location_city, 'Tempat Lahir', user.tempatLahir ?? '-'),
                             const Divider(),
                             _biodataRow(Icons.cake, 'Tanggal Lahir', _formatTanggal(user.tanggalLahir)),
                             const Divider(),
-                            _biodataRow(Icons.wc, 'Jenis Kelamin', user.jenisKelamin),
+                            _biodataRow(Icons.wc, 'Jenis Kelamin', user.jenisKelamin ?? '-'),
                             const Divider(),
-                            _biodataRow(Icons.home, 'Alamat', user.alamat),
+                            _biodataRow(Icons.home, 'Alamat', user.alamat ?? '-'),
                             const Divider(),
                             _biodataRow(Icons.email, 'Email', user.email ?? '-'),
                             const Divider(),
-                            _biodataRow(Icons.phone, 'No. Handphone', user.noHandphone),
+                            _biodataRow(Icons.phone, 'No. Handphone', user.noHandphone ?? '-'),
                             const Divider(),
-                            _biodataRow(Icons.account_circle, 'Username', user.username),
+                            _biodataRow(Icons.account_circle, 'Username', user.username ?? '-'),
                           ],
                         ),
                       ),
@@ -219,7 +249,8 @@ class _ProfilScreenState extends State<ProfilScreen> {
     );
   }
 
-  String _formatTanggal(DateTime tgl) {
+  String _formatTanggal(DateTime? tgl) {
+    if (tgl == null) return '-';
     return "${tgl.day.toString().padLeft(2, '0')}-${tgl.month.toString().padLeft(2, '0')}-${tgl.year}";
   }
 }

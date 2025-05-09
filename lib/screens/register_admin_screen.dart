@@ -12,10 +12,10 @@ class RegisterAdminScreen extends StatefulWidget {
 class _RegisterAdminScreenState extends State<RegisterAdminScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _namaLengkapController = TextEditingController();
-  final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _konfirmasiPasswordController = TextEditingController();
+  final _jabatanController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureKonfirmasiPassword = true;
@@ -41,10 +41,10 @@ class _RegisterAdminScreenState extends State<RegisterAdminScreen> with SingleTi
   @override
   void dispose() {
     _namaLengkapController.dispose();
-    _emailController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _konfirmasiPasswordController.dispose();
+    _jabatanController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -62,7 +62,7 @@ class _RegisterAdminScreenState extends State<RegisterAdminScreen> with SingleTi
         username: _usernameController.text,
         password: _passwordController.text,
         namaLengkap: _namaLengkapController.text,
-        jabatan: 'Admin', // Default value
+        jabatan: _jabatanController.text,
       );
 
       if (success) {
@@ -90,10 +90,10 @@ class _RegisterAdminScreenState extends State<RegisterAdminScreen> with SingleTi
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
-                children: const [
-                  Icon(Icons.error_outline, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('Registrasi admin gagal. Silakan coba lagi.'),
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(authProvider.error ?? 'Registrasi admin gagal. Silakan coba lagi.'),
                 ],
               ),
               backgroundColor: Colors.red,
@@ -113,9 +113,7 @@ class _RegisterAdminScreenState extends State<RegisterAdminScreen> with SingleTi
               children: [
                 const Icon(Icons.error_outline, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text('Terjadi kesalahan: ${e.toString()}'),
-                ),
+                Text('Terjadi kesalahan: ${e.toString()}'),
               ],
             ),
             backgroundColor: Colors.red,
@@ -138,341 +136,206 @@ class _RegisterAdminScreenState extends State<RegisterAdminScreen> with SingleTi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Daftar Admin'),
+        backgroundColor: Colors.blue.shade900,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF1A237E),
-              Color(0xFF5B86E5),
-              Color(0xFF36D1C4),
+              Colors.blue.shade900,
+              Colors.blue.shade500,
             ],
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
-              ),
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
               child: FadeTransition(
                 opacity: _fadeAnimation,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Header
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
+                child: Card(
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Logo dan Judul
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              shape: BoxShape.circle,
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.admin_panel_settings,
-                                size: 40,
-                                color: Color(0xFF1A237E),
-                              ),
+                            child: Icon(
+                              Icons.admin_panel_settings,
+                              size: 40,
+                              color: Colors.blue.shade900,
                             ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Daftar Admin',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1A237E),
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                            const Text(
-                              'Buat akun admin baru untuk mengelola sistem',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      // Registration Form
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              TextFormField(
-                                controller: _namaLengkapController,
-                                decoration: InputDecoration(
-                                  labelText: 'Nama Lengkap',
-                                  hintText: 'Masukkan nama lengkap admin',
-                                  prefixIcon: const Icon(Icons.person, color: Color(0xFF1A237E)),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF1A237E), width: 2),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey.shade50,
-                                  labelStyle: const TextStyle(color: Color(0xFF1A237E)),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Nama lengkap tidak boleh kosong';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _emailController,
-                                decoration: InputDecoration(
-                                  labelText: 'Email',
-                                  hintText: 'Masukkan email admin',
-                                  prefixIcon: const Icon(Icons.email, color: Color(0xFF1A237E)),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF1A237E), width: 2),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey.shade50,
-                                  labelStyle: const TextStyle(color: Color(0xFF1A237E)),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Email tidak boleh kosong';
-                                  }
-                                  if (!value.contains('@')) {
-                                    return 'Email tidak valid';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _usernameController,
-                                decoration: InputDecoration(
-                                  labelText: 'Username',
-                                  hintText: 'Masukkan username admin',
-                                  prefixIcon: const Icon(Icons.account_circle, color: Color(0xFF1A237E)),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF1A237E), width: 2),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey.shade50,
-                                  labelStyle: const TextStyle(color: Color(0xFF1A237E)),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Username tidak boleh kosong';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _passwordController,
-                                decoration: InputDecoration(
-                                  labelText: 'Password',
-                                  hintText: 'Masukkan password admin',
-                                  prefixIcon: const Icon(Icons.lock, color: Color(0xFF1A237E)),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                      color: Colors.grey,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF1A237E), width: 2),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey.shade50,
-                                  labelStyle: const TextStyle(color: Color(0xFF1A237E)),
-                                ),
-                                obscureText: _obscurePassword,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Password tidak boleh kosong';
-                                  }
-                                  if (value.length < 6) {
-                                    return 'Password minimal 6 karakter';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _konfirmasiPasswordController,
-                                decoration: InputDecoration(
-                                  labelText: 'Konfirmasi Password',
-                                  hintText: 'Masukkan ulang password admin',
-                                  prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF1A237E)),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscureKonfirmasiPassword ? Icons.visibility_off : Icons.visibility,
-                                      color: Colors.grey,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscureKonfirmasiPassword = !_obscureKonfirmasiPassword;
-                                      });
-                                    },
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF1A237E), width: 2),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey.shade50,
-                                  labelStyle: const TextStyle(color: Color(0xFF1A237E)),
-                                ),
-                                obscureText: _obscureKonfirmasiPassword,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Konfirmasi password tidak boleh kosong';
-                                  }
-                                  if (value != _passwordController.text) {
-                                    return 'Password tidak cocok';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 24),
-                              SizedBox(
-                                width: double.infinity,
-                                height: 50,
-                                child: ElevatedButton(
-                                  onPressed: _isLoading ? null : _register,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1A237E),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    elevation: 2,
-                                    shadowColor: const Color(0xFF1A237E).withOpacity(0.5),
-                                  ),
-                                  child: _isLoading
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : const Text(
-                                          'Daftar Admin',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 1.2,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextButton.icon(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                icon: const Icon(Icons.arrow_back, color: Color(0xFF1A237E)),
-                                label: const Text(
-                                  'Kembali ke Login',
-                                  style: TextStyle(
-                                    color: Color(0xFF1A237E),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Daftar Admin',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade900,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const Text(
+                            'Buat akun admin baru',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Form Fields
+                          TextFormField(
+                            controller: _namaLengkapController,
+                            decoration: const InputDecoration(
+                              labelText: 'Nama Lengkap',
+                              prefixIcon: Icon(Icons.person),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Nama lengkap tidak boleh kosong';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _usernameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Username',
+                              prefixIcon: Icon(Icons.account_circle),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Username tidak boleh kosong';
+                              }
+                              if (value.length < 4) {
+                                return 'Username minimal 4 karakter';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _jabatanController,
+                            decoration: const InputDecoration(
+                              labelText: 'Jabatan',
+                              prefixIcon: Icon(Icons.work),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Jabatan tidak boleh kosong';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: const Icon(Icons.lock),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            obscureText: _obscurePassword,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Password tidak boleh kosong';
+                              }
+                              if (value.length < 6) {
+                                return 'Password minimal 6 karakter';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _konfirmasiPasswordController,
+                            decoration: InputDecoration(
+                              labelText: 'Konfirmasi Password',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureKonfirmasiPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureKonfirmasiPassword = !_obscureKonfirmasiPassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            obscureText: _obscureKonfirmasiPassword,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Konfirmasi password tidak boleh kosong';
+                              }
+                              if (value != _passwordController.text) {
+                                return 'Password tidak cocok';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Register Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _register,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                              Colors.white),
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Daftar',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

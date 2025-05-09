@@ -61,30 +61,64 @@ class _PaketMCUAdminScreenState extends State<PaketMCUAdminScreen> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // Hapus titik sebelum parsing ke double
-      final hargaString = _hargaController.text.replaceAll('.', '');
-      final paketData = {
-        'nama_paket': _namaPaketController.text,
-        'harga': double.parse(hargaString),
-        'deskripsi': _deskripsiController.text,
-      };
-      bool success;
-      if (_selectedPaket == null) {
-        success = await context.read<PaketMCUProvider>().createPaket(paketData);
-      } else {
-        success = await context.read<PaketMCUProvider>()
-            .updatePaket(_selectedPaket!.id, paketData);
-      }
-      if (success && mounted) {
-        Navigator.pop(context);
+      setState(() {
+        _isLoading = true;
+      });
+      
+      try {
+        // Hapus titik sebelum parsing ke double
+        final hargaString = _hargaController.text.replaceAll('.', '');
+        final paketData = {
+          'nama_paket': _namaPaketController.text,
+          'harga': double.parse(hargaString),
+          'deskripsi': _deskripsiController.text,
+        };
+        
+        bool success;
+        if (_selectedPaket == null) {
+          success = await context.read<PaketMCUProvider>().createPaket(paketData);
+        } else {
+          success = await context.read<PaketMCUProvider>()
+              .updatePaket(_selectedPaket!.id, paketData);
+        }
+        
+        if (!mounted) return;
+        
+        if (success) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _selectedPaket == null ? 'Paket berhasil ditambahkan' : 'Paket berhasil diperbarui',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _resetForm();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                context.read<PaketMCUProvider>().error ?? 'Gagal menyimpan paket',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              _selectedPaket == null ? 'Paket berhasil ditambahkan' : 'Paket berhasil diperbarui',
-            ),
-            backgroundColor: Colors.green,
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
           ),
         );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
