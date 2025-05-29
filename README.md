@@ -25,22 +25,25 @@ Aplikasi Medical Check-Up (MCU) ini dirancang untuk mengelola data pasien yang m
 ### Rumusan Masalah
 1. Mengatasi inefisiensi dalam proses pendaftaran pasien.
 2. Meminimalisir kesalahan data pasien dan hasil pemeriksaan.
-3. Memberikan akses real-time bagi pasien.
-4. Menyediakan sistem pengelolaan data yang terintegrasi.
+3. Memberikan akses real-time bagi pasien untuk memantau hasil pemeriksaan.
+4. Menyediakan sistem pengelolaan data yang terintegrasi dengan sinkronisasi real-time.
 
 ## ✨ Fitur
 - Pendaftaran pasien online
 - Pemesanan paket MCU
-- Manajemen data pasien
-- Pencatatan hasil pemeriksaan
-- Notifikasi hasil
-- Akses riwayat MCU
+- Manajemen data pasien secara real-time
+- Pencatatan dan pembaruan hasil pemeriksaan secara instan
+- Notifikasi hasil secara otomatis
+- Akses riwayat MCU dengan sinkronisasi real-time
+- Tampilan dashboard interaktif dengan data terupdate
 
 ## 💻 Teknologi yang Digunakan
 - Flutter (Mobile Framework)
 - Dart (Bahasa Pemrograman)
-- Firebase (Backend & Autentikasi)
-- SQLite (Database Lokal)
+- Supabase (Backend & Database Realtime)
+  - PostgreSQL (Database Relasional)
+  - Realtime API (Untuk sinkronisasi data real-time)
+  - Authentication (Manajemen pengguna)
 
 ## 📱 Instalasi
 1. Pastikan Flutter SDK sudah terinstall
