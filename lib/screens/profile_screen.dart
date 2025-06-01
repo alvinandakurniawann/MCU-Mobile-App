@@ -27,14 +27,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (result != null) {
         final file = File(result.files.single.path!);
         final fileName = result.files.single.name;
-
+        
         // Get the application documents directory
         final appDir = await getApplicationDocumentsDirectory();
         final savedImage = File('${appDir.path}/$fileName');
-
+        
         // Copy the file to the application directory
         await file.copy(savedImage.path);
-
+        
         setState(() {
           _imageFile = savedImage;
         });
@@ -96,8 +96,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: _imageFile != null
                                   ? Image.file(_imageFile!, width: 96, height: 96, fit: BoxFit.cover)
                                   : (user?.fotoProfil != null
-                                  ? Image.network(user!.fotoProfil!, width: 96, height: 96, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.person, size: 60, color: Colors.grey))
-                                  : const Icon(Icons.person, size: 60, color: Colors.grey)),
+                                      ? Image.network(user!.fotoProfil!, width: 96, height: 96, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.person, size: 60, color: Colors.grey))
+                                      : const Icon(Icons.person, size: 60, color: Colors.grey)),
                             ),
                           ),
                           Positioned(
@@ -234,3 +234,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 } 
+
+
+buat code profile_screen yang ada eror
