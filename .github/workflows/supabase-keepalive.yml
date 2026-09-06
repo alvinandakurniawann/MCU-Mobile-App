@@ -1,0 +1,25 @@
+name: Supabase keep-alive
+
+# Query ringan tiap hari biar project Supabase Free tidak kena auto-pause 7 hari.
+# Setup secrets di GitHub repo: Settings > Secrets and variables > Actions:
+#   SUPABASE_URL      = https://zndtcyckdcqdsnfyflnw.supabase.co
+#   SUPABASE_ANON_KEY = anon key dari Supabase Dashboard > Project Settings > API
+
+on:
+  schedule:
+    - cron: "17 2 * * *" # tiap hari 09:17 WIB
+  workflow_dispatch: # tombol Run manual
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query ringan ke tabel paket_mcu
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          curl -sf -o /dev/null -w "paket_mcu: %{http_code}\n" \
+            "$SUPABASE_URL/rest/v1/paket_mcu?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY"
